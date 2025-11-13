@@ -4,7 +4,8 @@
   "private": true,
   "description": "Full-featured e-commerce platform monorepo",
   "workspaces": [
-    "apps/*",
+    "apps/services/api-gateway",
+    "apps/services/auth-service",
     "packages/*"
   ],
   "scripts": {
@@ -26,5 +27,6 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  }
+  },
+  "packageManager": "npm@9.0.0"
 }
