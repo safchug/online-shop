@@ -4,13 +4,17 @@
   "private": true,
   "description": "Full-featured e-commerce platform monorepo",
   "workspaces": [
-    "apps/*",
+    "apps/services/api-gateway",
+    "apps/services/auth-service",
     "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "test:auth": "npm run test:e2e --prefix apps/services/auth-service",
+    "install:auth": "npm install --prefix apps/services/auth-service",
     "lint": "turbo run lint",
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
@@ -23,5 +27,6 @@
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
-  }
+  },
+  "packageManager": "npm@9.0.0"
 }
