@@ -4,6 +4,7 @@ import {
   ConflictException,
   NotFoundException,
 } from "@nestjs/common";
+import { RpcException } from "@nestjs/microservices";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
@@ -33,7 +34,10 @@ export class AuthService {
     // Check if user already exists
     const existingUser = await this.userModel.findOne({ email });
     if (existingUser) {
-      throw new ConflictException("User with this email already exists");
+      throw new RpcException({
+        statusCode: 409,
+        message: "User with this email already exists",
+      });
     }
 
     // Create new user
@@ -67,18 +71,27 @@ export class AuthService {
     // Find user
     const user = await this.userModel.findOne({ email });
     if (!user) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new RpcException({
+        statusCode: 401,
+        message: "Invalid credentials",
+      });
     }
 
     // Check if user is active
     if (!user.isActive) {
-      throw new UnauthorizedException("Account is disabled");
+      throw new RpcException({
+        statusCode: 401,
+        message: "Account is disabled",
+      });
     }
 
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException("Invalid credentials");
+      throw new RpcException({
+        statusCode: 401,
+        message: "Invalid credentials",
+      });
     }
 
     // Update last login
@@ -111,7 +124,10 @@ export class AuthService {
         role: payload.role,
       };
     } catch (error) {
-      throw new UnauthorizedException("Invalid token");
+      throw new RpcException({
+        statusCode: 401,
+        message: "Invalid token",
+      });
     }
   }
 
@@ -128,12 +144,18 @@ export class AuthService {
       // Find user
       const user = await this.userModel.findById(payload.sub);
       if (!user) {
-        throw new UnauthorizedException("User not found");
+        throw new RpcException({
+          statusCode: 401,
+          message: "User not found",
+        });
       }
 
       // Verify refresh token matches
       if (user.refreshToken !== refreshToken) {
-        throw new UnauthorizedException("Invalid refresh token");
+        throw new RpcException({
+          statusCode: 401,
+          message: "Invalid refresh token",
+        });
       }
 
       // Generate new tokens
@@ -149,14 +171,23 @@ export class AuthService {
         refreshToken: tokens.refreshToken,
       };
     } catch (error) {
-      throw new UnauthorizedException("Invalid refresh token");
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      throw new RpcException({
+        statusCode: 401,
+        message: "Invalid refresh token",
+      });
     }
   }
 
   async getUserProfile(userId: string): Promise<UserResponseDto> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new RpcException({
+        statusCode: 404,
+        message: "User not found",
+      });
     }
 
     return this.formatUserResponse(user);
@@ -165,7 +196,10 @@ export class AuthService {
   async getUserById(userId: string): Promise<UserDocument> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new RpcException({
+        statusCode: 404,
+        message: "User not found",
+      });
     }
     return user;
   }
@@ -173,7 +207,10 @@ export class AuthService {
   async getUserByEmail(email: string): Promise<UserDocument> {
     const user = await this.userModel.findOne({ email });
     if (!user) {
-      throw new NotFoundException("User not found");
+      throw new RpcException({
+        statusCode: 404,
+        message: "User not found",
+      });
     }
     return user;
   }
@@ -189,14 +226,22 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(
-        { sub: payload.userId, email: payload.email, role: payload.role },
+        {
+          sub: payload.userId,
+          email: payload.email,
+          role: payload.role,
+          jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique token ID
+        },
         {
           secret: this.configService.get<string>("JWT_SECRET"),
           expiresIn: this.configService.get<string>("JWT_EXPIRATION"),
         }
       ),
       this.jwtService.signAsync(
-        { sub: payload.userId },
+        {
+          sub: payload.userId,
+          jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique token ID
+        },
         {
           secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
           expiresIn: this.configService.get<string>("JWT_REFRESH_EXPIRATION"),

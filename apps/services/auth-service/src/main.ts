@@ -2,6 +2,7 @@ import { NestFactory } from "@nestjs/core";
 import { Transport, MicroserviceOptions } from "@nestjs/microservices";
 import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
+import { AllRpcExceptionsFilter } from "./common/filters/rpc-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
@@ -14,6 +15,8 @@ async function bootstrap() {
       },
     }
   );
+
+  app.useGlobalFilters(new AllRpcExceptionsFilter());
 
   app.useGlobalPipes(
     new ValidationPipe({
