@@ -239,7 +239,7 @@ export class AuthService {
           sub: payload.userId,
           email: payload.email,
           role: payload.role,
-          jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique token ID
+          jti: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`, // Unique token ID
         },
         {
           secret: this.configService.get<string>("JWT_SECRET"),
@@ -249,7 +249,7 @@ export class AuthService {
       this.jwtService.signAsync(
         {
           sub: payload.userId,
-          jti: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Unique token ID
+          jti: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`, // Unique token ID
         },
         {
           secret: this.configService.get<string>("JWT_REFRESH_SECRET"),
