@@ -1,0 +1,58 @@
+import { MongooseModule } from "@nestjs/mongoose";
+import { MongoMemoryServer } from "mongodb-memory-server";
+import { Connection } from "mongoose";
+import { UserRole } from "../src/entities/user.entity";
+
+let mongod: MongoMemoryServer;
+
+export const rootMongooseTestModule = () =>
+  MongooseModule.forRootAsync({
+    useFactory: async () => {
+      mongod = await MongoMemoryServer.create();
+      const mongoUri = mongod.getUri();
+      return {
+        uri: mongoUri,
+      };
+    },
+  });
+
+export const closeInMongodConnection = async () => {
+  if (mongod) {
+    await mongod.stop();
+  }
+};
+
+export const clearDatabase = async (connection: Connection) => {
+  const collections = connection.collections;
+  for (const key in collections) {
+    const collection = collections[key];
+    await collection.deleteMany({});
+  }
+};
+
+export const createTestUser = (overrides?: any) => ({
+  email: "test@example.com",
+  password: "Password123!",
+  firstName: "Test",
+  lastName: "User",
+  role: UserRole.USER,
+  ...overrides,
+});
+
+export const createAdminUser = (overrides?: any) => ({
+  email: "admin@example.com",
+  password: "AdminPass123!",
+  firstName: "Admin",
+  lastName: "User",
+  role: UserRole.ADMIN,
+  ...overrides,
+});
+
+export const createVendorUser = (overrides?: any) => ({
+  email: "vendor@example.com",
+  password: "VendorPass123!",
+  firstName: "Vendor",
+  lastName: "User",
+  role: UserRole.VENDOR,
+  ...overrides,
+});
