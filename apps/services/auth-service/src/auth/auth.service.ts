@@ -5,7 +5,6 @@ import { Model } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
-import { timingSafeEqual } from "crypto";
 import { User, UserDocument } from "../entities/user.entity";
 import {
   RegisterDto,
@@ -50,8 +49,9 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.generateTokens(user);
 
-    // Save refresh token
-    user.refreshToken = tokens.refreshToken;
+    // Hash and save refresh token
+    const salt = await bcrypt.genSalt(10);
+    user.refreshToken = await bcrypt.hash(tokens.refreshToken, salt);
     await user.save();
 
     return {
@@ -97,8 +97,9 @@ export class AuthService {
     // Generate tokens
     const tokens = await this.generateTokens(user);
 
-    // Save refresh token
-    user.refreshToken = tokens.refreshToken;
+    // Hash and save refresh token
+    const salt = await bcrypt.genSalt(10);
+    user.refreshToken = await bcrypt.hash(tokens.refreshToken, salt);
     await user.save();
 
     return {
@@ -146,21 +147,20 @@ export class AuthService {
         });
       }
 
-      // Verify refresh token matches using constant-time comparison
-      if (
-        !user.refreshToken ||
-        user.refreshToken.length !== refreshToken.length
-      ) {
+      // Verify refresh token matches using bcrypt
+      if (!user.refreshToken) {
         throw new RpcException({
           statusCode: 401,
           message: "Invalid refresh token",
         });
       }
 
-      const storedTokenBuffer = Buffer.from(user.refreshToken, "utf8");
-      const providedTokenBuffer = Buffer.from(refreshToken, "utf8");
+      const isRefreshTokenValid = await bcrypt.compare(
+        refreshToken,
+        user.refreshToken
+      );
 
-      if (!timingSafeEqual(storedTokenBuffer, providedTokenBuffer)) {
+      if (!isRefreshTokenValid) {
         throw new RpcException({
           statusCode: 401,
           message: "Invalid refresh token",
@@ -170,8 +170,9 @@ export class AuthService {
       // Generate new tokens
       const tokens = await this.generateTokens(user);
 
-      // Update refresh token
-      user.refreshToken = tokens.refreshToken;
+      // Hash and update refresh token
+      const salt = await bcrypt.genSalt(10);
+      user.refreshToken = await bcrypt.hash(tokens.refreshToken, salt);
       await user.save();
 
       return {
