@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
+import { timingSafeEqual } from "crypto";
 import { User, UserDocument } from "../entities/user.entity";
 import {
   RegisterDto,
@@ -145,8 +146,21 @@ export class AuthService {
         });
       }
 
-      // Verify refresh token matches
-      if (user.refreshToken !== refreshToken) {
+      // Verify refresh token matches using constant-time comparison
+      if (
+        !user.refreshToken ||
+        user.refreshToken.length !== refreshToken.length
+      ) {
+        throw new RpcException({
+          statusCode: 401,
+          message: "Invalid refresh token",
+        });
+      }
+
+      const storedTokenBuffer = Buffer.from(user.refreshToken, "utf8");
+      const providedTokenBuffer = Buffer.from(refreshToken, "utf8");
+
+      if (!timingSafeEqual(storedTokenBuffer, providedTokenBuffer)) {
         throw new RpcException({
           statusCode: 401,
           message: "Invalid refresh token",
