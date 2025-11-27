@@ -26,7 +26,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: "Bad request" })
   async register(@Body() registerDto: RegisterDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "register" }, registerDto)
+      this.authService.send("auth.register", registerDto)
     );
   }
 
@@ -36,9 +36,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "User successfully logged in" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async login(@Body() loginDto: LoginDto) {
-    return await firstValueFrom(
-      this.authService.send({ cmd: "login" }, loginDto)
-    );
+    return await firstValueFrom(this.authService.send("auth.login", loginDto));
   }
 
   @Post("refresh")
@@ -47,9 +45,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Token refreshed successfully" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async refresh(@Body() body: { refreshToken: string }) {
-    return await firstValueFrom(
-      this.authService.send({ cmd: "refresh" }, body)
-    );
+    return await firstValueFrom(this.authService.send("auth.refresh", body));
   }
 
   @Post("verify-email")
@@ -58,7 +54,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Email verified successfully" })
   async verifyEmail(@Body() body: { token: string }) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "verify-email" }, body)
+      this.authService.send("auth.verify-email", body)
     );
   }
 
@@ -68,7 +64,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Password reset email sent" })
   async forgotPassword(@Body() body: { email: string }) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "forgot-password" }, body)
+      this.authService.send("auth.forgot-password", body)
     );
   }
 
@@ -78,7 +74,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "Password reset successfully" })
   async resetPassword(@Body() body: { token: string; newPassword: string }) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "reset-password" }, body)
+      this.authService.send("auth.reset-password", body)
     );
   }
 }

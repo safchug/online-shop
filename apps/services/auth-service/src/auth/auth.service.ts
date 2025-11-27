@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
+import * as crypto from "crypto";
 import { User, UserDocument } from "../entities/user.entity";
 import {
   RegisterDto,
@@ -35,6 +36,13 @@ export class AuthService {
       });
     }
 
+    // Generate email verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
     // Create new user
     const user = new this.userModel({
       email,
@@ -42,9 +50,13 @@ export class AuthService {
       firstName,
       lastName,
       role,
+      emailVerificationToken: hashedToken,
     });
 
     await user.save();
+
+    // TODO: Send verification email with verificationToken
+    console.log(`Email verification token for ${email}: ${verificationToken}`);
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
@@ -223,6 +235,127 @@ export class AuthService {
       });
     }
     return user;
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      // Return success even if user doesn't exist (security best practice)
+      return {
+        message: "If the email exists, a password reset link has been sent",
+      };
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Set token and expiry (1 hour from now)
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await user.save();
+
+    // TODO: Send email with resetToken (not hashedToken)
+    // For now, just return success message
+    // In production, you would send an email with a link containing the resetToken
+    console.log(`Password reset token for ${email}: ${resetToken}`);
+
+    return {
+      message: "If the email exists, a password reset link has been sent",
+    };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    // Hash the provided token to compare with stored hash
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    // Find user with valid reset token
+    const user = await this.userModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.refreshToken = undefined; // Invalidate all refresh tokens
+    await user.save();
+
+    return { message: "Password reset successfully" };
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    // Hash the provided token to compare with stored hash
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await this.userModel.findOne({
+      emailVerificationToken: hashedToken,
+    });
+
+    if (!user) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Invalid verification token",
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return { message: "Email already verified" };
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    await user.save();
+
+    return { message: "Email verified successfully" };
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    const user = await this.userModel.findOne({ email });
+    if (!user) {
+      // Return success even if user doesn't exist (security best practice)
+      return {
+        message: "If the email exists, a verification link has been sent",
+      };
+    }
+
+    if (user.isEmailVerified) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Email already verified",
+      });
+    }
+
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(verificationToken)
+      .digest("hex");
+
+    user.emailVerificationToken = hashedToken;
+    await user.save();
+
+    // TODO: Send email with verificationToken (not hashedToken)
+    console.log(`Email verification token for ${email}: ${verificationToken}`);
+
+    return {
+      message: "If the email exists, a verification link has been sent",
+    };
   }
 
   private async generateTokens(

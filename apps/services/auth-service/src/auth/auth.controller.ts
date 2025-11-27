@@ -46,4 +46,24 @@ export class AuthController {
   async getUserByEmail(@Payload() data: { email: string }) {
     return this.authService.getUserByEmail(data.email);
   }
+
+  @MessagePattern("auth.forgot-password")
+  async forgotPassword(@Payload() data: { email: string }) {
+    return this.authService.forgotPassword(data.email);
+  }
+
+  @MessagePattern("auth.reset-password")
+  async resetPassword(@Payload() data: { token: string; newPassword: string }) {
+    return this.authService.resetPassword(data.token, data.newPassword);
+  }
+
+  @MessagePattern("auth.verify-email")
+  async verifyEmail(@Payload() data: { token: string }) {
+    return this.authService.verifyEmail(data.token);
+  }
+
+  @MessagePattern("auth.resend-verification")
+  async resendVerificationEmail(@Payload() data: { email: string }) {
+    return this.authService.resendVerificationEmail(data.email);
+  }
 }
