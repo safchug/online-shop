@@ -1,19 +1,28 @@
-import { MongooseModule } from "@nestjs/mongoose";
+import { Module, DynamicModule, Provider } from "@nestjs/common";
+import {
+  MongooseModule,
+  getConnectionToken,
+  getModelToken,
+} from "@nestjs/mongoose";
+import { ModuleRef } from "@nestjs/core";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import { Connection } from "mongoose";
 import { UserRole } from "../src/entities/user.entity";
 
-let mongod: MongoMemoryServer;
+let mongod: MongoMemoryServer | undefined;
+let mongoUri: string | undefined;
 
-export const rootMongooseTestModule = () =>
-  MongooseModule.forRootAsync({
-    useFactory: async () => {
-      mongod = await MongoMemoryServer.create();
-      const mongoUri = mongod.getUri();
-      return {
-        uri: mongoUri,
-      };
-    },
+export const initMongoMemoryServer = async () => {
+  if (!mongod) {
+    mongod = await MongoMemoryServer.create();
+    mongoUri = mongod.getUri();
+  }
+  return mongoUri!;
+};
+
+export const rootMongooseTestModule = (uri: string) =>
+  MongooseModule.forRoot(uri, {
+    directConnection: true,
   });
 
 export const closeInMongodConnection = async () => {

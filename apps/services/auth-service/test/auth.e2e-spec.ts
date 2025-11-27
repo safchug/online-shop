@@ -5,7 +5,9 @@ import { ConfigModule } from "@nestjs/config";
 import { Connection } from "mongoose";
 import { getConnectionToken } from "@nestjs/mongoose";
 import { AppModule } from "../src/app.module";
+import { AuthModule } from "../src/auth/auth.module";
 import {
+  initMongoMemoryServer,
   rootMongooseTestModule,
   closeInMongodConnection,
   clearDatabase,
@@ -26,14 +28,38 @@ describe("Auth Service E2E Tests", () => {
   let app: INestMicroservice;
   let client: ClientProxy;
   let connection: Connection;
+  let moduleFixture: TestingModule;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    // Initialize MongoMemoryServer first
+    const mongoUri = await initMongoMemoryServer();
+
+    // Set the MongoDB URI in the environment
+    process.env.MONGODB_URI = mongoUri;
+    process.env.JWT_SECRET = "test-secret-key-for-jwt-testing";
+    process.env.JWT_EXPIRATION = "1h";
+    process.env.JWT_REFRESH_EXPIRATION = "7d";
+
+    // Create the microservice app using AppModule
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    connection = moduleRef.get(getConnectionToken());
+
+    app = moduleRef.createNestMicroservice({
+      transport: Transport.TCP,
+      options: {
+        host: "localhost",
+        port: 3099,
+      },
+    });
+
+    await app.listen();
+
+    // Create the client module
+    moduleFixture = await Test.createTestingModule({
       imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-          envFilePath: ".env.test",
-        }),
         ClientsModule.register([
           {
             name: "AUTH_SERVICE",
@@ -48,43 +74,47 @@ describe("Auth Service E2E Tests", () => {
     }).compile();
 
     client = moduleFixture.get("AUTH_SERVICE");
-
-    // Create the microservice app with in-memory MongoDB
-    const testModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-          envFilePath: ".env.test",
-        }),
-        rootMongooseTestModule(),
-      ],
-    }).compile();
-
-    const appModule = await Test.createTestingModule({
-      imports: [AppModule],
-    })
-      .overrideProvider(getConnectionToken())
-      .useValue(testModule.get(getConnectionToken()))
-      .compile();
-
-    app = appModule.createNestMicroservice({
-      transport: Transport.TCP,
-      options: {
-        host: "localhost",
-        port: 3099,
-      },
-    });
-
-    await app.listen();
     await client.connect();
-
-    connection = testModule.get(getConnectionToken());
   });
 
   afterAll(async () => {
-    await client.close();
-    await app.close();
-    await closeInMongodConnection();
+    try {
+      if (client) {
+        await client.close();
+      }
+    } catch (error) {
+      console.error("Error closing client:", error);
+    }
+
+    try {
+      if (app) {
+        await app.close();
+      }
+    } catch (error) {
+      console.error("Error closing app:", error);
+    }
+
+    try {
+      if (connection) {
+        await connection.close();
+      }
+    } catch (error) {
+      console.error("Error closing connection:", error);
+    }
+
+    try {
+      if (moduleFixture) {
+        await moduleFixture.close();
+      }
+    } catch (error) {
+      console.error("Error closing moduleFixture:", error);
+    }
+
+    try {
+      await closeInMongodConnection();
+    } catch (error) {
+      console.error("Error closing mongod:", error);
+    }
   });
 
   beforeEach(async () => {
