@@ -37,11 +37,8 @@ export class AuthService {
     }
 
     // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(verificationToken)
-      .digest("hex");
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
 
     // Create new user
     const user = new this.userModel({
@@ -247,11 +244,7 @@ export class AuthService {
     }
 
     // Generate reset token
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(resetToken)
-      .digest("hex");
+    const { token: resetToken, hashedToken } = this.generateHashedToken();
 
     // Set token and expiry (1 hour from now)
     user.passwordResetToken = hashedToken;
@@ -341,11 +334,8 @@ export class AuthService {
     }
 
     // Generate verification token
-    const verificationToken = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(verificationToken)
-      .digest("hex");
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
 
     user.emailVerificationToken = hashedToken;
     await user.save();
@@ -407,5 +397,12 @@ export class AuthService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  private generateHashedToken(): { token: string; hashedToken: string } {
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    return { token, hashedToken };
   }
 }
