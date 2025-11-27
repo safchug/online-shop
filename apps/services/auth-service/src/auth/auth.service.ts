@@ -14,6 +14,7 @@ import {
   UserResponseDto,
   TokenPayloadDto,
   RefreshTokenDto,
+  ResetPasswordDto,
 } from "./dto";
 
 @Injectable()
@@ -261,9 +262,10 @@ export class AuthService {
   }
 
   async resetPassword(
-    token: string,
-    newPassword: string
+    resetPasswordDto: ResetPasswordDto
   ): Promise<{ message: string }> {
+    const { token, newPassword } = resetPasswordDto;
+
     // Hash the provided token to compare with stored hash
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 

@@ -55,10 +55,7 @@ export class AuthController {
 
   @MessagePattern("auth.reset-password")
   async resetPassword(@Payload() resetPasswordDto: ResetPasswordDto) {
-    return this.authService.resetPassword(
-      resetPasswordDto.token,
-      resetPasswordDto.newPassword
-    );
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @MessagePattern("auth.verify-email")
