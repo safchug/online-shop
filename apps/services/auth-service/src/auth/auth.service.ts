@@ -235,14 +235,8 @@ export class AuthService {
 
   async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
-    if (!user) {
-      // Return success even if user doesn't exist (security best practice)
-      return {
-        message: "If the email exists, a password reset link has been sent",
-      };
-    }
 
-    // Generate reset token
+    // Always generate token to prevent timing attacks
     const { token: resetToken, hashedToken } = this.generateHashedToken();
 
     // Set token and expiry
@@ -252,12 +246,15 @@ export class AuthService {
     );
     const expirationMs = this.parseTimeToMilliseconds(expirationTime);
 
-    user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = new Date(Date.now() + expirationMs);
-    await user.save();
+    if (user) {
+      user.passwordResetToken = hashedToken;
+      user.passwordResetExpires = new Date(Date.now() + expirationMs);
+      await user.save();
 
-    // TODO: Send email with resetToken (not hashedToken)
+      // TODO: Send email with resetToken (not hashedToken)
+    }
 
+    // Always return the same response regardless of whether user exists
     return {
       message: "If the email exists, a password reset link has been sent",
     };
