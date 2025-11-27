@@ -10,6 +10,7 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "types": ["node"],
     "paths": {
       "@shared-types/*": ["../../../packages/shared-types/src/*"],
       "@shared-utils/*": ["../../../packages/shared-utils/src/*"]
