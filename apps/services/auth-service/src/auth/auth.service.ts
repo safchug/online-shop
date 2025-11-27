@@ -38,7 +38,8 @@ export class AuthService {
     }
 
     // Generate email verification token
-    const { token: verificationToken, hashedToken } = this.generateHashedToken();
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
 
     // Set token expiration for email verification
     const expirationTime = this.configService.get<string>(
@@ -61,8 +62,10 @@ export class AuthService {
     await user.save();
 
     // TODO: Send verification email with verificationToken
-    if (this.configService.get('NODE_ENV') === "development") {
-      console.log(`Email verification token for ${email}: ${verificationToken}`);
+    if (this.configService.get("NODE_ENV") === "development") {
+      console.log(
+        `Email verification token for ${email}: ${verificationToken}`
+      );
     }
 
     // Generate tokens
@@ -263,7 +266,7 @@ export class AuthService {
       await user.save();
 
       // TODO: Send email with resetToken (not hashedToken)
-      if (this.configService.get('NODE_ENV') === "development") {
+      if (this.configService.get("NODE_ENV") === "development") {
         console.log(`Password reset token for ${email}: ${resetToken}`);
       }
     }
@@ -338,7 +341,8 @@ export class AuthService {
 
     if (user && !user.isEmailVerified) {
       // Generate token only if user exists and is not verified
-      const { token: verificationToken, hashedToken } = this.generateHashedToken();
+      const { token: verificationToken, hashedToken } =
+        this.generateHashedToken();
 
       // Set token expiration
       const expirationTime = this.configService.get<string>(
@@ -358,8 +362,10 @@ export class AuthService {
       );
 
       // TODO: Send email with verificationToken (not hashedToken)
-      if (this.configService.get('NODE_ENV') === "development") {
-        console.log(`Email verification token for ${email}: ${verificationToken}`);
+      if (this.configService.get("NODE_ENV") === "development") {
+        console.log(
+          `Email verification token for ${email}: ${verificationToken}`
+        );
       }
     }
 
@@ -472,9 +478,7 @@ export class AuthService {
       10 * 365 * 24 * 60 * 60 * 1000
     );
     if (result > MAX_MILLISECONDS) {
-      throw new Error(
-        "Time value too large: exceeds maximum allowed"
-      );
+      throw new Error("Time value too large: exceeds maximum allowed");
     }
 
     return result;

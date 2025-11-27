@@ -21,9 +21,7 @@ export const initMongoMemoryServer = async () => {
 };
 
 export const rootMongooseTestModule = (uri: string) =>
-  MongooseModule.forRoot(uri, {
-    directConnection: true,
-  });
+  MongooseModule.forRoot(uri);
 
 export const closeInMongodConnection = async () => {
   if (mongod) {

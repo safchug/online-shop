@@ -42,7 +42,14 @@ describe("Auth Service E2E Tests", () => {
 
     // Create the microservice app using AppModule
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [
+        ConfigModule.forRoot({
+          isGlobal: true,
+          envFilePath: ".env",
+        }),
+        rootMongooseTestModule(mongoUri),
+        AuthModule,
+      ],
     }).compile();
 
     connection = moduleRef.get(getConnectionToken());
