@@ -41,6 +41,13 @@ export class AuthService {
     const { token: verificationToken, hashedToken } =
       this.generateHashedToken();
 
+    // Set token expiration (same as password reset)
+    const expirationTime = this.configService.get<string>(
+      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+      "24h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     // Create new user
     const user = new this.userModel({
       email,
@@ -49,6 +56,7 @@ export class AuthService {
       lastName,
       role,
       emailVerificationToken: hashedToken,
+      emailVerificationExpires: new Date(Date.now() + expirationMs),
     });
 
     await user.save();
@@ -298,12 +306,13 @@ export class AuthService {
 
     const user = await this.userModel.findOne({
       emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: new Date() },
     });
 
     if (!user) {
       throw new RpcException({
         statusCode: 400,
-        message: "Invalid verification token",
+        message: "Invalid or expired verification token",
       });
     }
 
@@ -313,6 +322,7 @@ export class AuthService {
 
     user.isEmailVerified = true;
     user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
     await user.save();
 
     return { message: "Email verified successfully" };
@@ -338,7 +348,15 @@ export class AuthService {
     const { token: verificationToken, hashedToken } =
       this.generateHashedToken();
 
+    // Set token expiration
+    const expirationTime = this.configService.get<string>(
+      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+      "24h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     user.emailVerificationToken = hashedToken;
+    user.emailVerificationExpires = new Date(Date.now() + expirationMs);
     await user.save();
 
     // TODO: Send email with verificationToken (not hashedToken)
