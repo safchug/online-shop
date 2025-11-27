@@ -330,21 +330,8 @@ export class AuthService {
 
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
-    if (!user) {
-      // Return success even if user doesn't exist (security best practice)
-      return {
-        message: "If the email exists, a verification link has been sent",
-      };
-    }
 
-    if (user.isEmailVerified) {
-      throw new RpcException({
-        statusCode: 400,
-        message: "Email already verified",
-      });
-    }
-
-    // Generate verification token
+    // Always generate token to prevent timing attacks
     const { token: verificationToken, hashedToken } =
       this.generateHashedToken();
 
@@ -355,12 +342,22 @@ export class AuthService {
     );
     const expirationMs = this.parseTimeToMilliseconds(expirationTime);
 
-    user.emailVerificationToken = hashedToken;
-    user.emailVerificationExpires = new Date(Date.now() + expirationMs);
-    await user.save();
+    if (user) {
+      if (user.isEmailVerified) {
+        throw new RpcException({
+          statusCode: 400,
+          message: "Email already verified",
+        });
+      }
 
-    // TODO: Send email with verificationToken (not hashedToken)
+      user.emailVerificationToken = hashedToken;
+      user.emailVerificationExpires = new Date(Date.now() + expirationMs);
+      await user.save();
 
+      // TODO: Send email with verificationToken (not hashedToken)
+    }
+
+    // Always return the same response regardless of whether user exists
     return {
       message: "If the email exists, a verification link has been sent",
     };
