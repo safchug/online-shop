@@ -6,6 +6,7 @@ import {
   LoginDto,
   ValidateTokenDto,
   RefreshTokenDto,
+  ResetPasswordDto,
 } from "./dto";
 
 @Controller()
@@ -53,8 +54,11 @@ export class AuthController {
   }
 
   @MessagePattern("auth.reset-password")
-  async resetPassword(@Payload() data: { token: string; newPassword: string }) {
-    return this.authService.resetPassword(data.token, data.newPassword);
+  async resetPassword(@Payload() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(
+      resetPasswordDto.token,
+      resetPasswordDto.newPassword
+    );
   }
 
   @MessagePattern("auth.verify-email")

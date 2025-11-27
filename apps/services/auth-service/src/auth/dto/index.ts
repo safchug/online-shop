@@ -59,6 +59,18 @@ export class RefreshTokenDto {
   refreshToken: string;
 }
 
+export class ResetPasswordDto {
+  @IsString()
+  @IsNotEmpty()
+  token: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  @IsNotEmpty()
+  newPassword: string;
+}
+
 export class AuthResponseDto {
   user: {
     id: string;
