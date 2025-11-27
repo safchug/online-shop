@@ -17,6 +17,7 @@ import {
   VerifyEmailDto,
   ForgotPasswordDto,
   ResetPasswordDto,
+  ResendVerificationDto,
 } from "./dto";
 
 @ApiTags("Authentication")
@@ -84,6 +85,18 @@ export class AuthController {
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return await firstValueFrom(
       this.authService.send("auth.reset-password", resetPasswordDto)
+    );
+  }
+
+  @Post("resend-verification")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Resend email verification" })
+  @ApiResponse({ status: 200, description: "Verification email sent" })
+  async resendVerification(
+    @Body() resendVerificationDto: ResendVerificationDto
+  ) {
+    return await firstValueFrom(
+      this.authService.send("auth.resend-verification", resendVerificationDto)
     );
   }
 }

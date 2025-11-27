@@ -33,13 +33,13 @@ export class User {
   @Prop({ default: false })
   isEmailVerified: boolean;
 
-  @Prop()
+  @Prop({ index: true })
   emailVerificationToken?: string;
 
   @Prop()
   emailVerificationExpires?: Date;
 
-  @Prop()
+  @Prop({ index: true })
   passwordResetToken?: string;
 
   @Prop()

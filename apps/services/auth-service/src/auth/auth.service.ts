@@ -248,19 +248,18 @@ export class AuthService {
   }
 
   async forgotPassword(email: string): Promise<{ message: string }> {
+    // Always generate token to prevent timing attacks
+    const { token: resetToken, hashedToken } = this.generateHashedToken();
+
+    const expirationTime = this.configService.get<string>(
+      "PASSWORD_RESET_TOKEN_EXPIRATION",
+      "1h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     const user = await this.userModel.findOne({ email });
 
     if (user) {
-      // Generate token only if user exists
-      const { token: resetToken, hashedToken } = this.generateHashedToken();
-
-      // Set token and expiry
-      const expirationTime = this.configService.get<string>(
-        "PASSWORD_RESET_TOKEN_EXPIRATION",
-        "1h"
-      );
-      const expirationMs = this.parseTimeToMilliseconds(expirationTime);
-
       user.passwordResetToken = hashedToken;
       user.passwordResetExpires = new Date(Date.now() + expirationMs);
       await user.save();
@@ -337,20 +336,19 @@ export class AuthService {
   }
 
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    // Always generate token to prevent timing attacks
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
+
+    const expirationTime = this.configService.get<string>(
+      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+      "24h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     const user = await this.userModel.findOne({ email });
 
     if (user && !user.isEmailVerified) {
-      // Generate token only if user exists and is not verified
-      const { token: verificationToken, hashedToken } =
-        this.generateHashedToken();
-
-      // Set token expiration
-      const expirationTime = this.configService.get<string>(
-        "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
-        "24h"
-      );
-      const expirationMs = this.parseTimeToMilliseconds(expirationTime);
-
       // Atomically update only if email is still unverified
       await this.userModel.findOneAndUpdate(
         { email, isEmailVerified: false },

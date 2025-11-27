@@ -95,3 +95,10 @@ export class ResetPasswordDto {
   @IsNotEmpty()
   newPassword: string;
 }
+
+export class ResendVerificationDto {
+  @ApiProperty({ example: "user@example.com" })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
