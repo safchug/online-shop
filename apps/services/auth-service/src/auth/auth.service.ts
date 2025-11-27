@@ -275,7 +275,7 @@ export class AuthService {
     const { token, newPassword } = resetPasswordDto;
 
     // Hash the provided token to compare with stored hash
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const hashedToken = this.hashToken(token);
 
     // Find user with valid reset token
     const user = await this.userModel.findOne({
@@ -302,7 +302,7 @@ export class AuthService {
 
   async verifyEmail(token: string): Promise<{ message: string }> {
     // Hash the provided token to compare with stored hash
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const hashedToken = this.hashToken(token);
 
     const user = await this.userModel.findOne({
       emailVerificationToken: hashedToken,
@@ -416,9 +416,13 @@ export class AuthService {
 
   private generateHashedToken(): { token: string; hashedToken: string } {
     const token = crypto.randomBytes(32).toString("hex");
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const hashedToken = this.hashToken(token);
 
     return { token, hashedToken };
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
   }
 
   /**
