@@ -4,23 +4,24 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { AuthController } from "./auth.controller";
-import { MICROSERVICES } from "../../config/microservices.config";
+import {
+  MICROSERVICES,
+  getMicroserviceConfig,
+} from "../../config/microservices.config";
 import { JwtStrategy } from "./strategies/jwt.strategy";
+
+const config = getMicroserviceConfig();
 
 @Module({
   imports: [
-    ClientsModule.registerAsync([
+    ClientsModule.register([
       {
         name: MICROSERVICES.AUTH_SERVICE,
-        imports: [ConfigModule],
-        useFactory: (configService: ConfigService) => ({
-          transport: Transport.TCP,
-          options: {
-            host: configService.get<string>("AUTH_SERVICE_HOST", "localhost"),
-            port: configService.get<number>("AUTH_SERVICE_PORT", 4001),
-          },
-        }),
-        inject: [ConfigService],
+        transport: Transport.TCP,
+        options: {
+          host: config[MICROSERVICES.AUTH_SERVICE].host,
+          port: config[MICROSERVICES.AUTH_SERVICE].port,
+        },
       },
     ]),
     PassportModule.register({ defaultStrategy: "jwt" }),
