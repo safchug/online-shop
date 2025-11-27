@@ -53,7 +53,6 @@ export class AuthService {
     await user.save();
 
     // TODO: Send verification email with verificationToken
-    console.log(`Email verification token for ${email}: ${verificationToken}`);
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
@@ -252,9 +251,6 @@ export class AuthService {
     await user.save();
 
     // TODO: Send email with resetToken (not hashedToken)
-    // For now, just return success message
-    // In production, you would send an email with a link containing the resetToken
-    console.log(`Password reset token for ${email}: ${resetToken}`);
 
     return {
       message: "If the email exists, a password reset link has been sent",
@@ -341,7 +337,6 @@ export class AuthService {
     await user.save();
 
     // TODO: Send email with verificationToken (not hashedToken)
-    console.log(`Email verification token for ${email}: ${verificationToken}`);
 
     return {
       message: "If the email exists, a verification link has been sent",
