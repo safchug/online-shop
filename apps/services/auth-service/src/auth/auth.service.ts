@@ -41,7 +41,7 @@ export class AuthService {
     const { token: verificationToken, hashedToken } =
       this.generateHashedToken();
 
-    // Set token expiration (same as password reset)
+    // Set token expiration for email verification
     const expirationTime = this.configService.get<string>(
       "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
       "24h"
@@ -62,6 +62,11 @@ export class AuthService {
     await user.save();
 
     // TODO: Send verification email with verificationToken
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        `Email verification token for ${email}: ${verificationToken}`
+      );
+    }
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
@@ -245,22 +250,25 @@ export class AuthService {
   async forgotPassword(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
 
-    // Always generate token to prevent timing attacks
-    const { token: resetToken, hashedToken } = this.generateHashedToken();
-
-    // Set token and expiry
-    const expirationTime = this.configService.get<string>(
-      "PASSWORD_RESET_TOKEN_EXPIRATION",
-      "1h"
-    );
-    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
-
     if (user) {
+      // Generate token only if user exists
+      const { token: resetToken, hashedToken } = this.generateHashedToken();
+
+      // Set token and expiry
+      const expirationTime = this.configService.get<string>(
+        "PASSWORD_RESET_TOKEN_EXPIRATION",
+        "1h"
+      );
+      const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
       user.passwordResetToken = hashedToken;
       user.passwordResetExpires = new Date(Date.now() + expirationMs);
       await user.save();
 
       // TODO: Send email with resetToken (not hashedToken)
+      if (process.env.NODE_ENV === "development") {
+        console.log(`Password reset token for ${email}: ${resetToken}`);
+      }
     }
 
     // Always return the same response regardless of whether user exists
@@ -331,30 +339,41 @@ export class AuthService {
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
 
-    // Always generate token to prevent timing attacks
-    const { token: verificationToken, hashedToken } =
-      this.generateHashedToken();
-
-    // Set token expiration
-    const expirationTime = this.configService.get<string>(
-      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
-      "24h"
-    );
-    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
-
     if (user) {
-      if (user.isEmailVerified) {
+      // Generate token only if user exists
+      const { token: verificationToken, hashedToken } =
+        this.generateHashedToken();
+
+      // Set token expiration
+      const expirationTime = this.configService.get<string>(
+        "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+        "24h"
+      );
+      const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
+      // Atomically update only if email is still unverified
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        { email, isEmailVerified: false },
+        {
+          emailVerificationToken: hashedToken,
+          emailVerificationExpires: new Date(Date.now() + expirationMs),
+        },
+        { new: true }
+      );
+
+      if (!updatedUser) {
         throw new RpcException({
           statusCode: 400,
           message: "Email already verified",
         });
       }
 
-      user.emailVerificationToken = hashedToken;
-      user.emailVerificationExpires = new Date(Date.now() + expirationMs);
-      await user.save();
-
       // TODO: Send email with verificationToken (not hashedToken)
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          `Email verification token for ${email}: ${verificationToken}`
+        );
+      }
     }
 
     // Always return the same response regardless of whether user exists
@@ -443,7 +462,9 @@ export class AuthService {
 
     const match = timeString.match(/^(\d+)([a-z]+)$/i);
     if (!match) {
-      throw new Error(`Invalid time format: ${timeString}`);
+      throw new Error(
+        "Invalid time format. Expected format: [number][unit] (e.g., 1h, 30m, 7d)"
+      );
     }
 
     const [, valueStr, unit] = match;
@@ -451,9 +472,24 @@ export class AuthService {
     const multiplier = units[unit.toLowerCase()];
 
     if (!multiplier) {
-      throw new Error(`Unsupported time unit: ${unit}`);
+      throw new Error(
+        "Unsupported time unit. Supported units: ms, s, m, h, d, w"
+      );
     }
 
-    return value * multiplier;
+    const result = value * multiplier;
+
+    // Limit: 10 years in ms, or Number.MAX_SAFE_INTEGER, whichever is lower
+    const MAX_MILLISECONDS = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      10 * 365 * 24 * 60 * 60 * 1000
+    );
+    if (result > MAX_MILLISECONDS) {
+      throw new Error(
+        `Time value too large: exceeds maximum allowed (${MAX_MILLISECONDS}ms)`
+      );
+    }
+
+    return result;
   }
 }

@@ -10,7 +10,14 @@ import { ClientProxy } from "@nestjs/microservices";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { firstValueFrom } from "rxjs";
 import { MICROSERVICES } from "../../config/microservices.config";
-import { LoginDto, RegisterDto } from "./dto";
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  VerifyEmailDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from "./dto";
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -44,17 +51,19 @@ export class AuthController {
   @ApiOperation({ summary: "Refresh access token" })
   @ApiResponse({ status: 200, description: "Token refreshed successfully" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async refresh(@Body() body: { refreshToken: string }) {
-    return await firstValueFrom(this.authService.send("auth.refresh", body));
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
+    return await firstValueFrom(
+      this.authService.send("auth.refresh", refreshTokenDto)
+    );
   }
 
   @Post("verify-email")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Verify email address" })
   @ApiResponse({ status: 200, description: "Email verified successfully" })
-  async verifyEmail(@Body() body: { token: string }) {
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return await firstValueFrom(
-      this.authService.send("auth.verify-email", body)
+      this.authService.send("auth.verify-email", verifyEmailDto)
     );
   }
 
@@ -62,9 +71,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Request password reset" })
   @ApiResponse({ status: 200, description: "Password reset email sent" })
-  async forgotPassword(@Body() body: { email: string }) {
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return await firstValueFrom(
-      this.authService.send("auth.forgot-password", body)
+      this.authService.send("auth.forgot-password", forgotPasswordDto)
     );
   }
 
@@ -72,9 +81,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Reset password" })
   @ApiResponse({ status: 200, description: "Password reset successfully" })
-  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return await firstValueFrom(
-      this.authService.send("auth.reset-password", body)
+      this.authService.send("auth.reset-password", resetPasswordDto)
     );
   }
 }

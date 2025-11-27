@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsEnum,
+  Matches,
 } from "class-validator";
 import { UserRole } from "../../entities/user.entity";
 
@@ -62,6 +63,9 @@ export class RefreshTokenDto {
 export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
+  @Matches(/^[a-f0-9]{64}$/i, {
+    message: "Token must be a 64-character hexadecimal string",
+  })
   token: string;
 
   @IsString()
@@ -101,4 +105,25 @@ export class TokenPayloadDto {
   userId: string;
   email: string;
   role: UserRole;
+}
+
+export class VerifyEmailDto {
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^[a-f0-9]{64}$/i, {
+    message: "Token must be a 64-character hexadecimal string",
+  })
+  token: string;
+}
+
+export class ForgotPasswordDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+}
+
+export class ResendVerificationDto {
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 }

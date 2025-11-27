@@ -7,6 +7,9 @@ import {
   ValidateTokenDto,
   RefreshTokenDto,
   ResetPasswordDto,
+  VerifyEmailDto,
+  ForgotPasswordDto,
+  ResendVerificationDto,
 } from "./dto";
 
 @Controller()
@@ -49,8 +52,8 @@ export class AuthController {
   }
 
   @MessagePattern("auth.forgot-password")
-  async forgotPassword(@Payload() data: { email: string }) {
-    return this.authService.forgotPassword(data.email);
+  async forgotPassword(@Payload() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto.email);
   }
 
   @MessagePattern("auth.reset-password")
@@ -59,12 +62,16 @@ export class AuthController {
   }
 
   @MessagePattern("auth.verify-email")
-  async verifyEmail(@Payload() data: { token: string }) {
-    return this.authService.verifyEmail(data.token);
+  async verifyEmail(@Payload() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto.token);
   }
 
   @MessagePattern("auth.resend-verification")
-  async resendVerificationEmail(@Payload() data: { email: string }) {
-    return this.authService.resendVerificationEmail(data.email);
+  async resendVerificationEmail(
+    @Payload() resendVerificationDto: ResendVerificationDto
+  ) {
+    return this.authService.resendVerificationEmail(
+      resendVerificationDto.email
+    );
   }
 }
