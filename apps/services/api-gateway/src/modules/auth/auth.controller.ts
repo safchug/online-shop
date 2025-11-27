@@ -10,7 +10,15 @@ import { ClientProxy } from "@nestjs/microservices";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { firstValueFrom } from "rxjs";
 import { MICROSERVICES } from "../../config/microservices.config";
-import { LoginDto, RegisterDto } from "./dto";
+import {
+  LoginDto,
+  RegisterDto,
+  RefreshTokenDto,
+  VerifyEmailDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  ResendVerificationDto,
+} from "./dto";
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -26,7 +34,7 @@ export class AuthController {
   @ApiResponse({ status: 400, description: "Bad request" })
   async register(@Body() registerDto: RegisterDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "register" }, registerDto)
+      this.authService.send("auth.register", registerDto)
     );
   }
 
@@ -36,9 +44,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: "User successfully logged in" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
   async login(@Body() loginDto: LoginDto) {
-    return await firstValueFrom(
-      this.authService.send({ cmd: "login" }, loginDto)
-    );
+    return await firstValueFrom(this.authService.send("auth.login", loginDto));
   }
 
   @Post("refresh")
@@ -46,9 +52,9 @@ export class AuthController {
   @ApiOperation({ summary: "Refresh access token" })
   @ApiResponse({ status: 200, description: "Token refreshed successfully" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  async refresh(@Body() body: { refreshToken: string }) {
+  async refresh(@Body() refreshTokenDto: RefreshTokenDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "refresh" }, body)
+      this.authService.send("auth.refresh", refreshTokenDto)
     );
   }
 
@@ -56,9 +62,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Verify email address" })
   @ApiResponse({ status: 200, description: "Email verified successfully" })
-  async verifyEmail(@Body() body: { token: string }) {
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "verify-email" }, body)
+      this.authService.send("auth.verify-email", verifyEmailDto)
     );
   }
 
@@ -66,9 +72,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Request password reset" })
   @ApiResponse({ status: 200, description: "Password reset email sent" })
-  async forgotPassword(@Body() body: { email: string }) {
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "forgot-password" }, body)
+      this.authService.send("auth.forgot-password", forgotPasswordDto)
     );
   }
 
@@ -76,9 +82,21 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Reset password" })
   @ApiResponse({ status: 200, description: "Password reset successfully" })
-  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return await firstValueFrom(
-      this.authService.send({ cmd: "reset-password" }, body)
+      this.authService.send("auth.reset-password", resetPasswordDto)
+    );
+  }
+
+  @Post("resend-verification")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Resend email verification" })
+  @ApiResponse({ status: 200, description: "Verification email sent" })
+  async resendVerification(
+    @Body() resendVerificationDto: ResendVerificationDto
+  ) {
+    return await firstValueFrom(
+      this.authService.send("auth.resend-verification", resendVerificationDto)
     );
   }
 }

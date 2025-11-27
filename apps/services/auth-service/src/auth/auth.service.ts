@@ -5,6 +5,7 @@ import { Model } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import * as bcrypt from "bcrypt";
+import * as crypto from "crypto";
 import { User, UserDocument } from "../entities/user.entity";
 import {
   RegisterDto,
@@ -13,6 +14,7 @@ import {
   UserResponseDto,
   TokenPayloadDto,
   RefreshTokenDto,
+  ResetPasswordDto,
 } from "./dto";
 
 @Injectable()
@@ -35,6 +37,17 @@ export class AuthService {
       });
     }
 
+    // Generate email verification token
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
+
+    // Set token expiration for email verification
+    const expirationTime = this.configService.get<string>(
+      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+      "24h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     // Create new user
     const user = new this.userModel({
       email,
@@ -42,9 +55,18 @@ export class AuthService {
       firstName,
       lastName,
       role,
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: new Date(Date.now() + expirationMs),
     });
 
     await user.save();
+
+    // TODO: Send verification email with verificationToken
+    if (this.configService.get("NODE_ENV") === "development") {
+      console.log(
+        `Email verification token for ${email}: ${verificationToken}`
+      );
+    }
 
     // Generate tokens
     const tokens = await this.generateTokens(user);
@@ -225,6 +247,132 @@ export class AuthService {
     return user;
   }
 
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    // Always generate token to prevent timing attacks
+    const { token: resetToken, hashedToken } = this.generateHashedToken();
+
+    const expirationTime = this.configService.get<string>(
+      "PASSWORD_RESET_TOKEN_EXPIRATION",
+      "1h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
+    const user = await this.userModel.findOne({ email });
+
+    if (user) {
+      user.passwordResetToken = hashedToken;
+      user.passwordResetExpires = new Date(Date.now() + expirationMs);
+      await user.save();
+
+      // TODO: Send email with resetToken (not hashedToken)
+      if (this.configService.get("NODE_ENV") === "development") {
+        console.log(`Password reset token for ${email}: ${resetToken}`);
+      }
+    }
+
+    // Always return the same response regardless of whether user exists
+    return {
+      message: "If the email exists, a password reset link has been sent",
+    };
+  }
+
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto
+  ): Promise<{ message: string }> {
+    const { token, newPassword } = resetPasswordDto;
+
+    // Hash the provided token to compare with stored hash
+    const hashedToken = this.hashToken(token);
+
+    // Find user with valid reset token
+    const user = await this.userModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    user.refreshToken = undefined; // Invalidate all refresh tokens
+    await user.save();
+
+    return { message: "Password reset successfully" };
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    // Hash the provided token to compare with stored hash
+    const hashedToken = this.hashToken(token);
+
+    const user = await this.userModel.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: new Date() },
+    });
+
+    if (!user) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Invalid or expired verification token",
+      });
+    }
+
+    if (user.isEmailVerified) {
+      return { message: "Email already verified" };
+    }
+
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+    await user.save();
+
+    return { message: "Email verified successfully" };
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    // Always generate token to prevent timing attacks
+    const { token: verificationToken, hashedToken } =
+      this.generateHashedToken();
+
+    const expirationTime = this.configService.get<string>(
+      "EMAIL_VERIFICATION_TOKEN_EXPIRATION",
+      "24h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
+    const user = await this.userModel.findOne({ email });
+
+    if (user && !user.isEmailVerified) {
+      // Atomically update only if email is still unverified
+      await this.userModel.findOneAndUpdate(
+        { email, isEmailVerified: false },
+        {
+          emailVerificationToken: hashedToken,
+          emailVerificationExpires: new Date(Date.now() + expirationMs),
+        },
+        { new: true }
+      );
+
+      // TODO: Send email with verificationToken (not hashedToken)
+      if (this.configService.get("NODE_ENV") === "development") {
+        console.log(
+          `Email verification token for ${email}: ${verificationToken}`
+        );
+      }
+    }
+
+    // Always return the same response regardless of whether user exists or is already verified
+    return {
+      message: "If the email exists, a verification link has been sent",
+    };
+  }
+
   private async generateTokens(
     user: UserDocument
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -274,5 +422,63 @@ export class AuthService {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
+  }
+
+  private generateHashedToken(): { token: string; hashedToken: string } {
+    const token = crypto.randomBytes(32).toString("hex");
+    const hashedToken = this.hashToken(token);
+
+    return { token, hashedToken };
+  }
+
+  private hashToken(token: string): string {
+    return crypto.createHash("sha256").update(token).digest("hex");
+  }
+
+  /**
+   * Parse time string to milliseconds
+   * Supports formats like: 1h, 30m, 7d, 1w
+   * @param timeString - Time string to parse (e.g., "1h", "30m", "7d")
+   * @returns Time in milliseconds
+   */
+  private parseTimeToMilliseconds(timeString: string): number {
+    const units: Record<string, number> = {
+      ms: 1,
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+      w: 7 * 24 * 60 * 60 * 1000,
+    };
+
+    const match = timeString.match(/^(\d+)([a-zA-Z]+)$/);
+    if (!match) {
+      throw new Error(
+        "Invalid time format. Expected format: [number][unit] (e.g., 1h, 30m, 7d)"
+      );
+    }
+
+    const [, valueStr, unit] = match;
+    const value = parseInt(valueStr, 10);
+    const multiplier = units[unit.toLowerCase()];
+
+    if (!multiplier) {
+      throw new Error(
+        "Unsupported time unit. Supported units: ms, s, m, h, d, w"
+      );
+    }
+
+    const result = value * multiplier;
+
+    // Limit: 10 years in ms, or Number.MAX_SAFE_INTEGER, whichever is lower
+    const MAX_MILLISECONDS = Math.min(
+      Number.MAX_SAFE_INTEGER,
+      10 * 365 * 24 * 60 * 60 * 1000
+    );
+    if (result > MAX_MILLISECONDS) {
+      throw new Error("Time value too large: exceeds maximum allowed");
+    }
+
+    return result;
   }
 }

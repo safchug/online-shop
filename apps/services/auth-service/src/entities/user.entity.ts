@@ -33,10 +33,13 @@ export class User {
   @Prop({ default: false })
   isEmailVerified: boolean;
 
-  @Prop()
+  @Prop({ index: true })
   emailVerificationToken?: string;
 
   @Prop()
+  emailVerificationExpires?: Date;
+
+  @Prop({ index: true })
   passwordResetToken?: string;
 
   @Prop()
@@ -82,6 +85,7 @@ UserSchema.methods.toJSON = function () {
   delete obj.password;
   delete obj.refreshToken;
   delete obj.emailVerificationToken;
+  delete obj.emailVerificationExpires;
   delete obj.passwordResetToken;
   delete obj.passwordResetExpires;
   return obj;

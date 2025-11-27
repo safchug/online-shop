@@ -43,9 +43,11 @@ npm run start:dev
 
 - `MONGODB_URI` - MongoDB connection string
 - `JWT_SECRET` - Secret key for JWT tokens
-- `JWT_EXPIRATION` - JWT token expiration time
+- `JWT_EXPIRATION` - JWT token expiration time (e.g., "7d", "1h")
 - `JWT_REFRESH_SECRET` - Secret key for refresh tokens
-- `JWT_REFRESH_EXPIRATION` - Refresh token expiration time
+- `JWT_REFRESH_EXPIRATION` - Refresh token expiration time (e.g., "30d", "7d")
+- `PASSWORD_RESET_TOKEN_EXPIRATION` - Password reset token expiration time (e.g., "1h", "30m")
+- `EMAIL_VERIFICATION_TOKEN_EXPIRATION` - Email verification token expiration time (e.g., "24h", "1d")
 - `AUTH_SERVICE_PORT` - Port for the microservice
 - `AUTH_SERVICE_HOST` - Host for the microservice
 
