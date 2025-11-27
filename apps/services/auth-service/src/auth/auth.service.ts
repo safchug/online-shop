@@ -245,9 +245,15 @@ export class AuthService {
     // Generate reset token
     const { token: resetToken, hashedToken } = this.generateHashedToken();
 
-    // Set token and expiry (1 hour from now)
+    // Set token and expiry
+    const expirationTime = this.configService.get<string>(
+      "PASSWORD_RESET_TOKEN_EXPIRATION",
+      "1h"
+    );
+    const expirationMs = this.parseTimeToMilliseconds(expirationTime);
+
     user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000);
+    user.passwordResetExpires = new Date(Date.now() + expirationMs);
     await user.save();
 
     // TODO: Send email with resetToken (not hashedToken)
@@ -399,5 +405,37 @@ export class AuthService {
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     return { token, hashedToken };
+  }
+
+  /**
+   * Parse time string to milliseconds
+   * Supports formats like: 1h, 30m, 7d, 1w
+   * @param timeString - Time string to parse (e.g., "1h", "30m", "7d")
+   * @returns Time in milliseconds
+   */
+  private parseTimeToMilliseconds(timeString: string): number {
+    const units: Record<string, number> = {
+      ms: 1,
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+      w: 7 * 24 * 60 * 60 * 1000,
+    };
+
+    const match = timeString.match(/^(\d+)([a-z]+)$/i);
+    if (!match) {
+      throw new Error(`Invalid time format: ${timeString}`);
+    }
+
+    const [, valueStr, unit] = match;
+    const value = parseInt(valueStr, 10);
+    const multiplier = units[unit.toLowerCase()];
+
+    if (!multiplier) {
+      throw new Error(`Unsupported time unit: ${unit}`);
+    }
+
+    return value * multiplier;
   }
 }
