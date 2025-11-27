@@ -38,8 +38,7 @@ export class AuthService {
     }
 
     // Generate email verification token
-    const { token: verificationToken, hashedToken } =
-      this.generateHashedToken();
+    const { token, hashedToken } = this.generateHashedToken();
 
     // Set token expiration for email verification
     const expirationTime = this.configService.get<string>(
@@ -61,11 +60,9 @@ export class AuthService {
 
     await user.save();
 
-    // TODO: Send verification email with verificationToken
+    // TODO: Send verification email with token
     if (process.env.NODE_ENV === "development") {
-      console.log(
-        `Email verification token for ${email}: ${verificationToken}`
-      );
+      console.log(`Email verification token for ${email}: ${token}`);
     }
 
     // Generate tokens
@@ -252,7 +249,7 @@ export class AuthService {
 
     if (user) {
       // Generate token only if user exists
-      const { token: resetToken, hashedToken } = this.generateHashedToken();
+      const { token, hashedToken } = this.generateHashedToken();
 
       // Set token and expiry
       const expirationTime = this.configService.get<string>(
@@ -265,9 +262,9 @@ export class AuthService {
       user.passwordResetExpires = new Date(Date.now() + expirationMs);
       await user.save();
 
-      // TODO: Send email with resetToken (not hashedToken)
+      // TODO: Send email with token (not hashedToken)
       if (process.env.NODE_ENV === "development") {
-        console.log(`Password reset token for ${email}: ${resetToken}`);
+        console.log(`Password reset token for ${email}: ${token}`);
       }
     }
 
@@ -341,8 +338,7 @@ export class AuthService {
 
     if (user) {
       // Generate token only if user exists
-      const { token: verificationToken, hashedToken } =
-        this.generateHashedToken();
+      const { token, hashedToken } = this.generateHashedToken();
 
       // Set token expiration
       const expirationTime = this.configService.get<string>(
@@ -368,11 +364,9 @@ export class AuthService {
         });
       }
 
-      // TODO: Send email with verificationToken (not hashedToken)
+      // TODO: Send email with token (not hashedToken)
       if (process.env.NODE_ENV === "development") {
-        console.log(
-          `Email verification token for ${email}: ${verificationToken}`
-        );
+        console.log(`Email verification token for ${email}: ${token}`);
       }
     }
 
@@ -460,7 +454,7 @@ export class AuthService {
       w: 7 * 24 * 60 * 60 * 1000,
     };
 
-    const match = timeString.match(/^(\d+)([a-z]+)$/i);
+    const match = timeString.match(/^(\d+)([a-zA-Z]+)$/);
     if (!match) {
       throw new Error(
         "Invalid time format. Expected format: [number][unit] (e.g., 1h, 30m, 7d)"
