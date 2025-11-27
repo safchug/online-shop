@@ -38,7 +38,7 @@ export class AuthService {
     }
 
     // Generate email verification token
-    const { token, hashedToken } = this.generateHashedToken();
+    const { token: verificationToken, hashedToken } = this.generateHashedToken();
 
     // Set token expiration for email verification
     const expirationTime = this.configService.get<string>(
@@ -60,9 +60,9 @@ export class AuthService {
 
     await user.save();
 
-    // TODO: Send verification email with token
-    if (process.env.NODE_ENV === "development") {
-      console.log(`Email verification token for ${email}: ${token}`);
+    // TODO: Send verification email with verificationToken
+    if (this.configService.get('NODE_ENV') === "development") {
+      console.log(`Email verification token for ${email}: ${verificationToken}`);
     }
 
     // Generate tokens
@@ -249,7 +249,7 @@ export class AuthService {
 
     if (user) {
       // Generate token only if user exists
-      const { token, hashedToken } = this.generateHashedToken();
+      const { token: resetToken, hashedToken } = this.generateHashedToken();
 
       // Set token and expiry
       const expirationTime = this.configService.get<string>(
@@ -262,9 +262,9 @@ export class AuthService {
       user.passwordResetExpires = new Date(Date.now() + expirationMs);
       await user.save();
 
-      // TODO: Send email with token (not hashedToken)
-      if (process.env.NODE_ENV === "development") {
-        console.log(`Password reset token for ${email}: ${token}`);
+      // TODO: Send email with resetToken (not hashedToken)
+      if (this.configService.get('NODE_ENV') === "development") {
+        console.log(`Password reset token for ${email}: ${resetToken}`);
       }
     }
 
@@ -336,9 +336,9 @@ export class AuthService {
   async resendVerificationEmail(email: string): Promise<{ message: string }> {
     const user = await this.userModel.findOne({ email });
 
-    if (user) {
-      // Generate token only if user exists
-      const { token, hashedToken } = this.generateHashedToken();
+    if (user && !user.isEmailVerified) {
+      // Generate token only if user exists and is not verified
+      const { token: verificationToken, hashedToken } = this.generateHashedToken();
 
       // Set token expiration
       const expirationTime = this.configService.get<string>(
@@ -348,7 +348,7 @@ export class AuthService {
       const expirationMs = this.parseTimeToMilliseconds(expirationTime);
 
       // Atomically update only if email is still unverified
-      const updatedUser = await this.userModel.findOneAndUpdate(
+      await this.userModel.findOneAndUpdate(
         { email, isEmailVerified: false },
         {
           emailVerificationToken: hashedToken,
@@ -357,20 +357,13 @@ export class AuthService {
         { new: true }
       );
 
-      if (!updatedUser) {
-        throw new RpcException({
-          statusCode: 400,
-          message: "Email already verified",
-        });
-      }
-
-      // TODO: Send email with token (not hashedToken)
-      if (process.env.NODE_ENV === "development") {
-        console.log(`Email verification token for ${email}: ${token}`);
+      // TODO: Send email with verificationToken (not hashedToken)
+      if (this.configService.get('NODE_ENV') === "development") {
+        console.log(`Email verification token for ${email}: ${verificationToken}`);
       }
     }
 
-    // Always return the same response regardless of whether user exists
+    // Always return the same response regardless of whether user exists or is already verified
     return {
       message: "If the email exists, a verification link has been sent",
     };
@@ -480,7 +473,7 @@ export class AuthService {
     );
     if (result > MAX_MILLISECONDS) {
       throw new Error(
-        `Time value too large: exceeds maximum allowed (${MAX_MILLISECONDS}ms)`
+        "Time value too large: exceeds maximum allowed"
       );
     }
 
