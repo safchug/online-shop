@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: order-service-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: order-service
+    ports:
+      - "27019:27017"
+    volumes:
+      - order-mongodb-data:/data/db
+    networks:
+      - order-service-network
+
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: order-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      ORDER_SERVICE_HOST: 0.0.0.0
+      ORDER_SERVICE_PORT: 3003
+      MONGODB_URI: mongodb://mongodb:27017/order-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - mongodb
+    networks:
+      - order-service-network
+
+volumes:
+  order-mongodb-data:
+
+networks:
+  order-service-network:
+    driver: bridge
