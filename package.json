@@ -10,6 +10,9 @@
   ],
   "scripts": {
     "dev": "turbo run dev",
+    "dev:frontend": "npm run dev --prefix apps/frontend",
+    "dev:backend": "turbo run dev",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "build": "turbo run build",
     "test": "turbo run test",
     "test:e2e": "turbo run test:e2e",
@@ -20,8 +23,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
-    "turbo": "^1.10.0",
+    "concurrently": "^9.2.1",
     "prettier": "^3.0.0",
+    "turbo": "^1.10.0",
     "typescript": "^5.2.0"
   },
   "engines": {
