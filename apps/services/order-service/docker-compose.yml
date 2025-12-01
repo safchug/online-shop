@@ -13,6 +13,11 @@ services:
       - order-mongodb-data:/data/db
     networks:
       - order-service-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   order-service:
     build:
@@ -30,7 +35,8 @@ services:
     ports:
       - "3003:3003"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     networks:
       - order-service-network
 

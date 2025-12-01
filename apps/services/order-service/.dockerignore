@@ -1,0 +1,34 @@
+# Node modules
+node_modules
+npm-debug.log
+
+# Testing
+coverage
+coverage-e2e
+test
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist
+
+# OS
+.DS_Store
+Thumbs.db

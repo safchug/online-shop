@@ -21,33 +21,59 @@ export class OrderService {
   ) {}
 
   async createOrder(createOrderDto: CreateOrderDto): Promise<OrderResponseDto> {
-    // Generate unique order number
-    const orderNumber = await this.generateOrderNumber();
+    try {
+      // Validate userId format
+      if (!Types.ObjectId.isValid(createOrderDto.userId)) {
+        throw new RpcException({
+          statusCode: 400,
+          message: "Invalid user ID",
+        });
+      }
 
-    // Create the order
-    const order = new this.orderModel({
-      userId: new Types.ObjectId(createOrderDto.userId),
-      orderNumber,
-      items: createOrderDto.items,
-      subtotal: createOrderDto.subtotal,
-      tax: createOrderDto.tax,
-      shippingCost: createOrderDto.shippingCost,
-      total: createOrderDto.total,
-      shippingAddress: createOrderDto.shippingAddress,
-      paymentId: createOrderDto.paymentId,
-      notes: createOrderDto.notes,
-      status: OrderStatus.PENDING,
-    });
+      // Generate unique order number
+      const orderNumber = await this.generateOrderNumber();
 
-    await order.save();
+      // Create the order
+      const order = new this.orderModel({
+        userId: new Types.ObjectId(createOrderDto.userId),
+        orderNumber,
+        items: createOrderDto.items,
+        subtotal: createOrderDto.subtotal,
+        tax: createOrderDto.tax,
+        shippingCost: createOrderDto.shippingCost,
+        total: createOrderDto.total,
+        shippingAddress: createOrderDto.shippingAddress,
+        paymentId: createOrderDto.paymentId,
+        notes: createOrderDto.notes,
+        status: OrderStatus.PENDING,
+      });
 
-    return this.formatOrderResponse(order);
+      await order.save();
+
+      return this.formatOrderResponse(order);
+    } catch (error) {
+      if (error instanceof RpcException) {
+        throw error;
+      }
+      throw new RpcException({
+        statusCode: 500,
+        message: "Failed to create order",
+      });
+    }
   }
 
   async getUserOrders(
     getUserOrdersDto: GetUserOrdersDto
   ): Promise<PaginatedOrdersResponseDto> {
     const { userId, status, page = 1, limit = 10 } = getUserOrdersDto;
+
+    // Validate userId format
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new RpcException({
+        statusCode: 400,
+        message: "Invalid user ID",
+      });
+    }
 
     const query: any = { userId: new Types.ObjectId(userId) };
     if (status) {

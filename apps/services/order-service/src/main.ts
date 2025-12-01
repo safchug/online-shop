@@ -5,13 +5,16 @@ import { AppModule } from "./app.module";
 import { AllRpcExceptionsFilter } from "./common/filters/rpc-exception.filter";
 
 async function bootstrap() {
+  const port = parseInt(process.env.ORDER_SERVICE_PORT, 10) || 3003;
+  const host = process.env.ORDER_SERVICE_HOST || "localhost";
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AppModule,
     {
       transport: Transport.TCP,
       options: {
-        host: process.env.ORDER_SERVICE_HOST || "localhost",
-        port: parseInt(process.env.ORDER_SERVICE_PORT, 10) || 3003,
+        host,
+        port,
       },
     }
   );
@@ -27,9 +30,10 @@ async function bootstrap() {
   );
 
   await app.listen();
-  console.log(
-    `Order microservice is running on port ${process.env.ORDER_SERVICE_PORT || 3003}`
-  );
+  console.log(`Order microservice is running on ${host}:${port}`);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error("Failed to start the microservice:", error);
+  process.exit(1);
+});
