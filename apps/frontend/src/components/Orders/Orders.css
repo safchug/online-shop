@@ -1,0 +1,36 @@
+/* Order components styling is handled by Tailwind CSS classes */
+/* This file is kept for potential custom styles */
+
+.order-card-hover {
+  transition: all 0.3s ease;
+}
+
+.order-card-hover:hover {
+  transform: translateY(-2px);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.modal-overlay {
+  backdrop-filter: blur(4px);
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
