@@ -67,9 +67,12 @@ const AdminOrdersPage: React.FC = () => {
 
   if (isLoading && orders.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600 font-medium text-lg">
+            Loading orders...
+          </p>
         </div>
       </div>
     );
@@ -77,79 +80,94 @@ const AdminOrdersPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          Error: {error}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 text-red-800 px-6 py-5 rounded-xl font-semibold shadow-lg flex items-center gap-3">
+          <span className="text-2xl">❌</span>
+          <span>Error: {error}</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">All Orders (Admin)</h1>
-        <p className="text-gray-600 mt-2">Manage and update order statuses</p>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          <span aria-hidden="true" className="text-4xl">👨‍💼</span>
+          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
+            All Orders (Admin)
+          </h1>
+        </div>
+        <p className="text-gray-600 text-lg ml-16">
+          Manage and update order statuses
+        </p>
       </div>
 
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Filter by Status
+      <div className="mb-8">
+        <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+          <span aria-hidden="true">🔍</span>
+          <span>Filter by Status</span>
         </label>
         <select
           value={statusFilter}
           onChange={(e) =>
             setStatusFilter(e.target.value as OrderStatus | "all")
           }
-          className="block w-full md:w-64 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="block w-full md:w-80 rounded-xl border-2 border-gray-300 px-4 py-3 shadow-md focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all font-medium text-gray-700"
         >
-          <option value="all">All Orders</option>
-          <option value={OrderStatus.PENDING}>Pending</option>
-          <option value={OrderStatus.PROCESSING}>Processing</option>
-          <option value={OrderStatus.SHIPPED}>Shipped</option>
-          <option value={OrderStatus.DELIVERED}>Delivered</option>
-          <option value={OrderStatus.CANCELLED}>Cancelled</option>
+          <option value="all">📋 All Orders</option>
+          <option value={OrderStatus.PENDING}>⏳ Pending</option>
+          <option value={OrderStatus.PROCESSING}>⚙️ Processing</option>
+          <option value={OrderStatus.SHIPPED}>🚚 Shipped</option>
+          <option value={OrderStatus.DELIVERED}>✅ Delivered</option>
+          <option value={OrderStatus.CANCELLED}>❌ Cancelled</option>
         </select>
       </div>
 
       {orders.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No orders found</p>
+        <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+          <span className="text-8xl block mb-4">📦</span>
+          <p className="text-gray-500 text-2xl font-bold">No orders found</p>
+          <p className="text-gray-400 text-lg mt-2">
+            {statusFilter !== "all"
+              ? "Try changing the filter"
+              : "No orders in the system yet"}
+          </p>
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {orders.map((order) => (
               <div key={order.id} className="relative">
                 <OrderCard order={order} />
                 <button
                   onClick={() => openStatusModal(order)}
-                  className="absolute top-4 right-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                  className="absolute top-6 right-6 px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5 z-10"
                 >
-                  Update Status
+                  ⚙️ Update Status
                 </button>
               </div>
             ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2 mt-8">
+            <div className="flex justify-center items-center gap-4 mt-10">
               <button
                 onClick={() => handlePageChange(page - 1)}
                 disabled={page === 1}
-                className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-purple-400 transition-all font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
               >
-                Previous
+                ← Previous
               </button>
-              <span className="text-sm text-gray-600">
+              <span className="px-6 py-3 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl font-bold text-gray-700">
                 Page {page} of {totalPages}
               </span>
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page === totalPages}
-                className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 hover:border-purple-400 transition-all font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 disabled:transform-none"
               >
-                Next
+                Next →
               </button>
             </div>
           )}
@@ -158,61 +176,69 @@ const AdminOrdersPage: React.FC = () => {
 
       {/* Update Status Modal */}
       {showStatusModal && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Update Order Status
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Order #{selectedOrder.orderNumber}
-            </p>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl border-2 border-gray-200 transform transition-all">
+            <div className="flex items-center gap-3 mb-4">
+              <span aria-hidden="true" className="text-3xl">⚙️</span>
+              <h3 className="text-2xl font-black text-gray-900">
+                Update Order Status
+              </h3>
+            </div>
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 px-4 py-3 rounded-lg mb-6 border-2 border-purple-200">
+              <p className="text-sm font-bold text-gray-700">
+                Order #{selectedOrder.orderNumber}
+              </p>
+            </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
+                <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <span aria-hidden="true">📊</span>
+                  <span>Status</span>
                 </label>
                 <select
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value as OrderStatus)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium"
                 >
-                  <option value={OrderStatus.PENDING}>Pending</option>
-                  <option value={OrderStatus.PROCESSING}>Processing</option>
-                  <option value={OrderStatus.SHIPPED}>Shipped</option>
-                  <option value={OrderStatus.DELIVERED}>Delivered</option>
-                  <option value={OrderStatus.CANCELLED}>Cancelled</option>
+                  <option value={OrderStatus.PENDING}>⏳ Pending</option>
+                  <option value={OrderStatus.PROCESSING}>⚙️ Processing</option>
+                  <option value={OrderStatus.SHIPPED}>🚚 Shipped</option>
+                  <option value={OrderStatus.DELIVERED}>✅ Delivered</option>
+                  <option value={OrderStatus.CANCELLED}>❌ Cancelled</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tracking Number (optional)
+                <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <span aria-hidden="true">🔍</span>
+                  <span>Tracking Number (optional)</span>
                 </label>
                 <input
                   type="text"
                   value={trackingNumber}
                   onChange={(e) => setTrackingNumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium"
                   placeholder="Enter tracking number"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Notes (optional)
+                <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <span aria-hidden="true">📝</span>
+                  <span>Notes (optional)</span>
                 </label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all font-medium resize-none"
                   rows={3}
                   placeholder="Add notes..."
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-4 mt-8">
               <button
                 onClick={() => {
                   setShowStatusModal(false);
@@ -221,16 +247,16 @@ const AdminOrdersPage: React.FC = () => {
                   setNotes("");
                 }}
                 disabled={isUpdating}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3.5 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold disabled:opacity-50 shadow-md hover:shadow-lg"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdateStatus}
                 disabled={isUpdating}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all font-bold disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {isUpdating ? "Updating..." : "Update Status"}
+                {isUpdating ? "⏳ Updating..." : "✅ Update Status"}
               </button>
             </div>
           </div>
