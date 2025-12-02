@@ -7,6 +7,7 @@
     "apps/services/api-gateway",
     "apps/services/auth-service",
     "apps/services/order-service",
+    "apps/services/product-service",
     "packages/*"
   ],
   "scripts": {
