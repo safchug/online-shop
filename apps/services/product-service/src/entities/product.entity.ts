@@ -143,7 +143,7 @@ export const ProductSchema = SchemaFactory.createForClass(Product);
 ProductSchema.index({ name: "text", description: "text", tags: "text" });
 ProductSchema.index({ category: 1, isActive: 1 });
 ProductSchema.index({ price: 1 });
-ProductSchema.index({ sku: 1 });
+// SKU index is already created via the unique property decorator
 ProductSchema.index({ vendorId: 1 });
 ProductSchema.index({ isFeatured: 1, isActive: 1 });
 ProductSchema.index({ averageRating: -1 });
