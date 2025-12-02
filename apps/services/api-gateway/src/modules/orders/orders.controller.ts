@@ -36,11 +36,9 @@ export class OrdersController {
   @ApiOperation({ summary: "Create new order" })
   @ApiResponse({ status: 201, description: "Order created successfully" })
   async createOrder(@CurrentUser() user: any, @Body() orderData: any) {
+    const payload = { userId: user.userId, ...orderData };
     return await firstValueFrom(
-      this.orderService.send(
-        { cmd: "create-order" },
-        { userId: user.userId, ...orderData }
-      )
+      this.orderService.send({ cmd: "create-order" }, payload)
     );
   }
 

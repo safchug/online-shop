@@ -6,6 +6,7 @@
   "workspaces": [
     "apps/services/api-gateway",
     "apps/services/auth-service",
+    "apps/services/order-service",
     "packages/*"
   ],
   "scripts": {
