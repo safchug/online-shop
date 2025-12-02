@@ -8,7 +8,7 @@ import {
 } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
-import { firstValueFrom, timeout, retry } from "rxjs";
+import { firstValueFrom } from "rxjs";
 import { MICROSERVICES } from "../../config/microservices.config";
 import {
   LoginDto,
