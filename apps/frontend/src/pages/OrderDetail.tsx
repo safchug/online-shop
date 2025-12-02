@@ -119,7 +119,7 @@ const OrderDetailPage: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border-2 border-gray-200 transform transition-all">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-3xl">⚠️</span>
+              <span aria-hidden="true" className="text-3xl">⚠️</span>
               <h3 className="text-2xl font-black text-gray-900">
                 Cancel Order
               </h3>
@@ -130,7 +130,7 @@ const OrderDetailPage: React.FC = () => {
             </p>
             <div className="mb-6">
               <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                <span>📝</span>
+                <span aria-hidden="true">📝</span>
                 <span>Reason for cancellation (optional)</span>
               </label>
               <textarea

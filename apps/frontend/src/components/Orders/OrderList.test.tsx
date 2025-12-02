@@ -110,8 +110,8 @@ describe("OrderList", () => {
 
     renderWithProviders(<OrderList />, { preloadedState });
 
-    expect(screen.getByText("Previous")).toBeInTheDocument();
-    expect(screen.getByText("Next")).toBeInTheDocument();
+    expect(screen.getByText(/← Previous/i)).toBeInTheDocument();
+    expect(screen.getByText(/Next →/i)).toBeInTheDocument();
     expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
   });
 
@@ -131,7 +131,7 @@ describe("OrderList", () => {
 
     renderWithProviders(<OrderList />, { preloadedState });
 
-    const previousButton = screen.getByText("Previous");
+    const previousButton = screen.getByText(/← Previous/i);
     expect(previousButton).toBeDisabled();
   });
 
@@ -151,7 +151,7 @@ describe("OrderList", () => {
 
     renderWithProviders(<OrderList />, { preloadedState });
 
-    const nextButton = screen.getByText("Next");
+    const nextButton = screen.getByText(/Next →/i);
 
     // Button should not be disabled since we're on page 1 and have 2 total pages
     expect(nextButton).not.toBeDisabled();

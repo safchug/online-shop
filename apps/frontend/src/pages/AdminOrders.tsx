@@ -93,7 +93,7 @@ const AdminOrdersPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-4xl">👨‍💼</span>
+          <span aria-hidden="true" className="text-4xl">👨‍💼</span>
           <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
             All Orders (Admin)
           </h1>
@@ -105,7 +105,7 @@ const AdminOrdersPage: React.FC = () => {
 
       <div className="mb-8">
         <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-          <span>🔍</span>
+          <span aria-hidden="true">🔍</span>
           <span>Filter by Status</span>
         </label>
         <select
@@ -179,7 +179,7 @@ const AdminOrdersPage: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl border-2 border-gray-200 transform transition-all">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl">⚙️</span>
+              <span aria-hidden="true" className="text-3xl">⚙️</span>
               <h3 className="text-2xl font-black text-gray-900">
                 Update Order Status
               </h3>
@@ -193,7 +193,7 @@ const AdminOrdersPage: React.FC = () => {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <span>📊</span>
+                  <span aria-hidden="true">📊</span>
                   <span>Status</span>
                 </label>
                 <select
@@ -211,7 +211,7 @@ const AdminOrdersPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <span>🔍</span>
+                  <span aria-hidden="true">🔍</span>
                   <span>Tracking Number (optional)</span>
                 </label>
                 <input
@@ -225,7 +225,7 @@ const AdminOrdersPage: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <span>📝</span>
+                  <span aria-hidden="true">📝</span>
                   <span>Notes (optional)</span>
                 </label>
                 <textarea
