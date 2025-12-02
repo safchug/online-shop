@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: product-service-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: product-service
+    ports:
+      - "27020:27017"
+    volumes:
+      - product-mongodb-data:/data/db
+    networks:
+      - product-service-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  product-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: product-service
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PRODUCT_SERVICE_HOST: 0.0.0.0
+      PRODUCT_SERVICE_PORT: 3004
+      MONGODB_URI: mongodb://mongodb:27017/product-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - product-service-network
+
+volumes:
+  product-mongodb-data:
+
+networks:
+  product-service-network:
+    driver: bridge
