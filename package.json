@@ -25,6 +25,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.17",
     "concurrently": "^9.2.1",
     "prettier": "^3.0.0",
     "turbo": "^1.10.0",

@@ -52,8 +52,11 @@ const OrderDetailPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600 font-medium text-lg">
+            Loading order details...
+          </p>
         </div>
       </div>
     );
@@ -62,14 +65,16 @@ const OrderDetailPage: React.FC = () => {
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          Error: {error}
+        <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-300 text-red-800 px-6 py-5 rounded-xl font-semibold shadow-lg flex items-center gap-3">
+          <span className="text-2xl">❌</span>
+          <span>Error: {error}</span>
         </div>
         <button
           onClick={() => navigate("/orders")}
-          className="mt-4 text-blue-600 hover:text-blue-800"
+          className="mt-6 text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2 text-lg hover:gap-3 transition-all"
         >
-          ← Back to Orders
+          <span>←</span>
+          <span>Back to Orders</span>
         </button>
       </div>
     );
@@ -78,12 +83,16 @@ const OrderDetailPage: React.FC = () => {
   if (!currentOrder) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <p className="text-gray-500">Order not found</p>
+        <div className="text-center py-16 bg-gray-50 rounded-xl border-2 border-dashed border-gray-300">
+          <span className="text-8xl block mb-4">🔍</span>
+          <p className="text-gray-500 text-2xl font-bold">Order not found</p>
+        </div>
         <button
           onClick={() => navigate("/orders")}
-          className="mt-4 text-blue-600 hover:text-blue-800"
+          className="mt-6 text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2 text-lg hover:gap-3 transition-all mx-auto"
         >
-          ← Back to Orders
+          <span>←</span>
+          <span>Back to Orders</span>
         </button>
       </div>
     );
@@ -93,9 +102,10 @@ const OrderDetailPage: React.FC = () => {
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <button
         onClick={() => navigate("/orders")}
-        className="mb-6 text-blue-600 hover:text-blue-800 flex items-center"
+        className="mb-8 text-blue-600 hover:text-blue-800 font-bold flex items-center gap-2 text-lg hover:gap-3 transition-all px-4 py-2 hover:bg-blue-50 rounded-lg"
       >
-        <span className="mr-2">←</span> Back to Orders
+        <span className="text-xl">←</span>
+        <span>Back to Orders</span>
       </button>
 
       <OrderDetails
@@ -106,44 +116,48 @@ const OrderDetailPage: React.FC = () => {
 
       {/* Cancel Order Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Cancel Order
-            </h3>
-            <p className="text-gray-600 mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl border-2 border-gray-200 transform transition-all">
+            <div className="flex items-center gap-3 mb-6">
+              <span aria-hidden="true" className="text-3xl">⚠️</span>
+              <h3 className="text-2xl font-black text-gray-900">
+                Cancel Order
+              </h3>
+            </div>
+            <p className="text-gray-700 mb-6 font-medium text-lg leading-relaxed">
               Are you sure you want to cancel this order? This action cannot be
               undone.
             </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reason for cancellation (optional)
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                <span aria-hidden="true">📝</span>
+                <span>Reason for cancellation (optional)</span>
               </label>
               <textarea
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                rows={3}
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all font-medium resize-none"
+                rows={4}
                 placeholder="Please provide a reason..."
               />
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-4">
               <button
                 onClick={() => {
                   setShowCancelModal(false);
                   setCancelReason("");
                 }}
                 disabled={isCancelling}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3.5 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-semibold disabled:opacity-50 shadow-md hover:shadow-lg"
               >
                 Keep Order
               </button>
               <button
                 onClick={handleCancelOrder}
                 disabled={isCancelling}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+                className="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all font-bold disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {isCancelling ? "Cancelling..." : "Cancel Order"}
+                {isCancelling ? "⏳ Cancelling..." : "❌ Cancel Order"}
               </button>
             </div>
           </div>
