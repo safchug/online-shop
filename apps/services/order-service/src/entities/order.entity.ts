@@ -119,5 +119,5 @@ export const OrderSchema = SchemaFactory.createForClass(Order);
 
 // Create indexes
 OrderSchema.index({ userId: 1, createdAt: -1 });
-OrderSchema.index({ orderNumber: 1 }, { unique: true });
+// orderNumber index already created by unique: true in @Prop
 OrderSchema.index({ status: 1 });

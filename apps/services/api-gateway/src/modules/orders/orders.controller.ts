@@ -36,11 +36,12 @@ export class OrdersController {
   @ApiOperation({ summary: "Create new order" })
   @ApiResponse({ status: 201, description: "Order created successfully" })
   async createOrder(@CurrentUser() user: any, @Body() orderData: any) {
+    console.log("API Gateway - User from JWT:", user);
+    console.log("API Gateway - Order data received:", orderData);
+    const payload = { userId: user.userId, ...orderData };
+    console.log("API Gateway - Sending to Order Service:", payload);
     return await firstValueFrom(
-      this.orderService.send(
-        { cmd: "create-order" },
-        { userId: user.userId, ...orderData }
-      )
+      this.orderService.send({ cmd: "create-order" }, payload)
     );
   }
 

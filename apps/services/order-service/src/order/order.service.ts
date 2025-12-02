@@ -55,9 +55,10 @@ export class OrderService {
       if (error instanceof RpcException) {
         throw error;
       }
+      console.error("Order creation error:", error);
       throw new RpcException({
         statusCode: 500,
-        message: "Failed to create order",
+        message: `Failed to create order: ${error.message}`,
       });
     }
   }

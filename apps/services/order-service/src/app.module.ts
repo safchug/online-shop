@@ -7,7 +7,6 @@ import { OrderModule } from "./order/order.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env",
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],

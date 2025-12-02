@@ -16,6 +16,10 @@ export class OrderController {
 
   @MessagePattern({ cmd: "create-order" })
   async createOrder(@Payload() createOrderDto: CreateOrderDto) {
+    console.log(
+      "Received create-order request:",
+      JSON.stringify(createOrderDto, null, 2)
+    );
     return this.orderService.createOrder(createOrderDto);
   }
 
