@@ -47,6 +47,10 @@ The system supports three roles:
    ```bash
    npm run create-admin
 
+
+
+   example:
+
    cd /Users/vasylsavchuk/online-shop/apps/services/auth-service && ADMIN_EMAIL=testadmin@example.com ADMIN_PASSWORD=TestAdmin123! ADMIN_FIRST_NAME=Test ADMIN_LAST_NAME=Admin npm run create-admin
    ```
 
