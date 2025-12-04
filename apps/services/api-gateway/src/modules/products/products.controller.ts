@@ -47,6 +47,15 @@ export class ProductsController {
     );
   }
 
+  @Get("search")
+  @ApiOperation({ summary: "Search products" })
+  @ApiResponse({ status: 200, description: "Search results retrieved" })
+  async searchProducts(@Query("q") query: string) {
+    return await firstValueFrom(
+      this.productService.send({ cmd: "search-products" }, { query })
+    );
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Get product by ID" })
   @ApiResponse({ status: 200, description: "Product retrieved successfully" })
@@ -92,15 +101,6 @@ export class ProductsController {
   async deleteProduct(@Param("id") id: string) {
     return await firstValueFrom(
       this.productService.send({ cmd: "delete-product" }, { productId: id })
-    );
-  }
-
-  @Get("search")
-  @ApiOperation({ summary: "Search products" })
-  @ApiResponse({ status: 200, description: "Search results retrieved" })
-  async searchProducts(@Query("q") query: string) {
-    return await firstValueFrom(
-      this.productService.send({ cmd: "search-products" }, { query })
     );
   }
 }
