@@ -9,12 +9,12 @@ async function createAdminUser() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const authService = app.get(AuthService);
 
-  // Admin user details - change these as needed
+  // Admin user details - can be overridden via environment variables
   const adminData = {
-    email: "admin@example.com",
-    password: "Admin123456",
-    firstName: "Admin",
-    lastName: "User",
+    email: process.env.ADMIN_EMAIL || "admin@example.com",
+    password: process.env.ADMIN_PASSWORD || "Admin123456",
+    firstName: process.env.ADMIN_FIRST_NAME || "Admin",
+    lastName: process.env.ADMIN_LAST_NAME || "User",
     role: UserRole.ADMIN,
   };
 
@@ -22,11 +22,15 @@ async function createAdminUser() {
     const result = await authService.register(adminData);
     console.log("✅ Admin user created successfully!");
     console.log("Email:", adminData.email);
-    console.log("Password:", adminData.password);
+    console.log("Password: ********");
     console.log("Role:", adminData.role);
-    console.log("\nUser ID:", result.user.id);
-  } catch (error) {
-    if (error.message?.includes("duplicate key error")) {
+    console.log("\nUser ID:", result?.user?.id || "N/A");
+  } catch (error: any) {
+    // Check for MongoDB duplicate key error (code 11000)
+    if (
+      error.code === 11000 ||
+      error.message?.includes("duplicate key error")
+    ) {
       console.log("⚠️  User with this email already exists");
     } else {
       console.error("❌ Error creating admin user:", error.message);

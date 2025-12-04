@@ -10,7 +10,7 @@ The system supports three roles:
 - **`vendor`** - Can create and manage products
 - **`admin`** - Full administrative access
 
-## Method 1: Using the Create Admin Script (Recommended)
+## Method 1: Using the Create Admin Script (Recommended & Most Secure)
 
 ### Quick Start
 
@@ -20,21 +20,34 @@ The system supports three roles:
    cd apps/services/auth-service
    ```
 
-2. Edit the admin details in `src/scripts/create-admin.ts`:
+2. Option A: Use environment variables (recommended):
+
+   ```bash
+   ADMIN_EMAIL=admin@yourcompany.com \
+   ADMIN_PASSWORD=YourSecurePassword123! \
+   ADMIN_FIRST_NAME=Admin \
+   ADMIN_LAST_NAME=User \
+   npm run create-admin
+   ```
+
+   Option B: Edit the admin details in `src/scripts/create-admin.ts`:
 
    ```typescript
    const adminData = {
-     email: "admin@example.com", // Change this
-     password: "Admin123456", // Change this
-     firstName: "Admin", // Change this
-     lastName: "User", // Change this
+     email: process.env.ADMIN_EMAIL || "admin@example.com",
+     password: process.env.ADMIN_PASSWORD || "Admin123456",
+     firstName: process.env.ADMIN_FIRST_NAME || "Admin",
+     lastName: process.env.ADMIN_LAST_NAME || "User",
      role: UserRole.ADMIN,
    };
    ```
 
 3. Run the script:
+
    ```bash
    npm run create-admin
+
+   cd /Users/vasylsavchuk/online-shop/apps/services/auth-service && ADMIN_EMAIL=testadmin@example.com ADMIN_PASSWORD=TestAdmin123! ADMIN_FIRST_NAME=Test ADMIN_LAST_NAME=Admin npm run create-admin
    ```
 
 ### Output
@@ -43,15 +56,17 @@ The system supports three roles:
 Creating admin user...
 ✅ Admin user created successfully!
 Email: admin@example.com
-Password: Admin123456
+Password: ********
 Role: admin
 
 User ID: 507f1f77bcf86cd799439011
 ```
 
-## Method 2: Via API Call
+## Method 2: Via API Call (Development Only - Requires Backend Configuration)
 
-Send a POST request to the registration endpoint with the `role` field:
+⚠️ **SECURITY WARNING**: This method allows role selection during registration, which is a critical security vulnerability if enabled in production. Ensure that role assignment is properly restricted (e.g., only available to existing admins or disabled in production environments).
+
+**For Development/Testing Only:**
 
 ```bash
 curl -X POST http://localhost:4000/api/auth/register \
@@ -64,6 +79,12 @@ curl -X POST http://localhost:4000/api/auth/register \
     "role": "admin"
   }'
 ```
+
+**Note**: In production, you should either:
+
+- Remove the ability to set roles via the public registration endpoint
+- Require admin authentication to create users with elevated roles
+- Use Method 1 (script) or Method 3 (database) for admin creation
 
 **Response:**
 
@@ -88,8 +109,8 @@ curl -X POST http://localhost:4000/api/auth/register \
 If you already have a user account and want to upgrade it to admin:
 
 ```bash
-# Connect to MongoDB
-mongosh mongodb://admin:admin123@localhost:27017/auth-db?authSource=admin
+# Connect to MongoDB (replace USERNAME and PASSWORD with your credentials)
+mongosh mongodb://USERNAME:PASSWORD@localhost:27017/auth-db?authSource=admin
 
 # Update user role
 db.users.updateOne(
@@ -98,10 +119,14 @@ db.users.updateOne(
 )
 ```
 
+**Note**: For local development, the default credentials are typically `admin:admin123`, but always check your `.env` file or `docker-compose.yml` for the actual values.
+
 ## Method 4: MongoDB Compass (GUI)
 
 1. Open MongoDB Compass
-2. Connect to: `mongodb://admin:admin123@localhost:27017/auth-db?authSource=admin`
+2. Connect to: `mongodb://USERNAME:PASSWORD@localhost:27017/auth-db?authSource=admin`
+   - Replace `USERNAME` and `PASSWORD` with your MongoDB credentials
+   - For local development, check your `.env` file for the actual connection string
 3. Navigate to `auth-db` > `users` collection
 4. Find the user you want to make admin
 5. Edit the document and change `role` field to `"admin"`
@@ -130,7 +155,8 @@ After creating an admin user, verify it worked:
 1. **Check MongoDB:**
 
    ```bash
-   mongosh mongodb://admin:admin123@localhost:27017/auth-db?authSource=admin
+   # Replace USERNAME and PASSWORD with your MongoDB credentials
+   mongosh mongodb://USERNAME:PASSWORD@localhost:27017/auth-db?authSource=admin
    db.users.find({ email: "admin@example.com" })
    ```
 
@@ -145,7 +171,7 @@ After creating an admin user, verify it worked:
      }'
    ```
 
-3. **Login via Frontend:**
+3. **Login via frontend:**
    - Go to http://localhost:3000/login
    - Enter admin credentials
    - Verify you can access admin features (create products, view all orders, etc.)
