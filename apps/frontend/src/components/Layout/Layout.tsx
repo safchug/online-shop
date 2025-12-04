@@ -44,6 +44,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 Dashboard
               </button>
               <button
+                onClick={() => navigate("/products")}
+                className={`nav-link ${isActive("/products") ? "active" : ""}`}
+              >
+                Products
+              </button>
+              <button
                 onClick={() => navigate("/orders")}
                 className={`nav-link ${isActive("/orders") && !isActive("/admin/orders") ? "active" : ""}`}
               >
@@ -64,7 +70,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               <span className="user-name">
                 {user.firstName} {user.lastName}
               </span>
-              {isAdmin && (
+              {(isAdmin || user.role === "vendor") && (
                 <span className="text-xs text-blue-600 font-medium ml-2">
                   {user.role.toUpperCase()}
                 </span>

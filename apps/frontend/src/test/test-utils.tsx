@@ -6,6 +6,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import authReducer from "@/store/slices/authSlice";
 import orderReducer from "@/store/slices/orderSlice";
+import productReducer from "@/store/slices/productSlice";
 
 interface ExtendedRenderOptions extends Omit<RenderOptions, "queries"> {
   preloadedState?: any;
@@ -20,6 +21,7 @@ export function renderWithProviders(
       reducer: {
         auth: authReducer,
         order: orderReducer,
+        product: productReducer,
       } as any,
       preloadedState,
     }),
