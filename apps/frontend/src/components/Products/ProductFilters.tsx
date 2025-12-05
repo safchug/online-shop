@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { ProductCategory, ProductFilters as IProductFilters } from "@/types/product.types";
+import {
+  ProductCategory,
+  ProductFilters as IProductFilters,
+  Product,
+} from "@/types/product.types";
+import { SearchAutocomplete } from "./SearchAutocomplete";
+import { useNavigate } from "react-router-dom";
 
 interface ProductFiltersProps {
   filters: IProductFilters;
@@ -12,6 +18,7 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   onFilterChange,
   onClearFilters,
 }) => {
+  const navigate = useNavigate();
   const [localFilters, setLocalFilters] = useState<IProductFilters>(filters);
 
   const handleChange = (key: keyof IProductFilters, value: any) => {
@@ -23,6 +30,11 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
   const handleClear = () => {
     setLocalFilters({ page: 1, limit: 12 });
     onClearFilters();
+  };
+
+  const handleSelectProduct = (product: Product) => {
+    // Navigate to product detail page when a suggestion is selected
+    navigate(`/products/${product._id}`);
   };
 
   return (
@@ -38,17 +50,16 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
       </div>
 
       <div className="space-y-4">
-        {/* Search */}
+        {/* Search with Autocomplete */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Search
           </label>
-          <input
-            type="text"
+          <SearchAutocomplete
             value={localFilters.search || ""}
-            onChange={(e) => handleChange("search", e.target.value)}
+            onChange={(value) => handleChange("search", value)}
+            onSelectProduct={handleSelectProduct}
             placeholder="Search products..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -115,7 +126,9 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             <input
               type="checkbox"
               checked={localFilters.inStock || false}
-              onChange={(e) => handleChange("inStock", e.target.checked || undefined)}
+              onChange={(e) =>
+                handleChange("inStock", e.target.checked || undefined)
+              }
               className="mr-2"
             />
             <span className="text-sm text-gray-700">In Stock Only</span>
@@ -128,7 +141,9 @@ export const ProductFilters: React.FC<ProductFiltersProps> = ({
             <input
               type="checkbox"
               checked={localFilters.isFeatured || false}
-              onChange={(e) => handleChange("isFeatured", e.target.checked || undefined)}
+              onChange={(e) =>
+                handleChange("isFeatured", e.target.checked || undefined)
+              }
               className="mr-2"
             />
             <span className="text-sm text-gray-700">Featured Only</span>
