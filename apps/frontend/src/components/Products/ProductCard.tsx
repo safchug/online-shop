@@ -1,12 +1,14 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Product } from "@/types/product.types";
+import { HighlightText } from "@/components/common/HighlightText";
 
 interface ProductCardProps {
   product: Product;
   onEdit?: (product: Product) => void;
   onDelete?: (productId: string) => void;
   showActions?: boolean;
+  searchQuery?: string;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -14,10 +16,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onEdit,
   onDelete,
   showActions = false,
+  searchQuery = "",
 }) => {
-  const primaryImage = product.images.find((img) => img.isPrimary) || product.images[0];
+  const primaryImage =
+    product.images.find((img) => img.isPrimary) || product.images[0];
   const discount = product.compareAtPrice
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+    ? Math.round(
+        ((product.compareAtPrice - product.price) / product.compareAtPrice) *
+          100
+      )
     : 0;
 
   return (
@@ -61,12 +68,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-4">
         <Link to={`/products/${product._id}`}>
           <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors truncate">
-            {product.name}
+            <HighlightText text={product.name} highlight={searchQuery} />
           </h3>
         </Link>
 
         {product.brand && (
-          <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
+          <p className="text-sm text-gray-500 mt-1">
+            <HighlightText text={product.brand} highlight={searchQuery} />
+          </p>
         )}
 
         <div className="flex items-center mt-2">
@@ -102,9 +111,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </span>
             )}
           </div>
-          <span className="text-sm text-gray-500">
-            Stock: {product.stock}
-          </span>
+          <span className="text-sm text-gray-500">Stock: {product.stock}</span>
         </div>
 
         <div className="mt-2 flex flex-wrap gap-1">
@@ -113,7 +120,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               key={tag}
               className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded"
             >
-              {tag}
+              <HighlightText text={tag} highlight={searchQuery} />
             </span>
           ))}
         </div>
@@ -131,7 +138,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {onDelete && (
               <button
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to delete this product?")) {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to delete this product?"
+                    )
+                  ) {
                     onDelete(product._id);
                   }
                 }}

@@ -8,6 +8,7 @@ interface ProductListProps {
   onEdit?: (product: Product) => void;
   onDelete?: (productId: string) => void;
   showActions?: boolean;
+  searchQuery?: string;
 }
 
 export const ProductList: React.FC<ProductListProps> = ({
@@ -16,6 +17,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   onEdit,
   onDelete,
   showActions = false,
+  searchQuery = "",
 }) => {
   if (loading) {
     return (
@@ -53,7 +55,9 @@ export const ProductList: React.FC<ProductListProps> = ({
             d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
           />
         </svg>
-        <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">
+          No products found
+        </h3>
         <p className="mt-1 text-sm text-gray-500">
           Try adjusting your search or filter criteria.
         </p>
@@ -70,6 +74,7 @@ export const ProductList: React.FC<ProductListProps> = ({
           onEdit={onEdit}
           onDelete={onDelete}
           showActions={showActions}
+          searchQuery={searchQuery}
         />
       ))}
     </div>

@@ -20,7 +20,9 @@ const ProductsPage: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   const isVendorOrAdmin =
-    user?.role === "vendor" || user?.role === "admin" || user?.role === "super_admin";
+    user?.role === "vendor" ||
+    user?.role === "admin" ||
+    user?.role === "super_admin";
 
   useEffect(() => {
     dispatch(fetchProducts(filters));
@@ -104,6 +106,7 @@ const ProductsPage: React.FC = () => {
             onEdit={isVendorOrAdmin ? handleEdit : undefined}
             onDelete={isVendorOrAdmin ? handleDelete : undefined}
             showActions={isVendorOrAdmin}
+            searchQuery={filters.search}
           />
 
           {/* Pagination */}
@@ -116,7 +119,7 @@ const ProductsPage: React.FC = () => {
               >
                 Previous
               </button>
-              
+
               <div className="flex gap-1">
                 {[...Array(totalPages)].map((_, i) => {
                   const pageNum = i + 1;
@@ -140,7 +143,11 @@ const ProductsPage: React.FC = () => {
                       </button>
                     );
                   } else if (pageNum === page - 2 || pageNum === page + 2) {
-                    return <span key={pageNum} className="px-2">...</span>;
+                    return (
+                      <span key={pageNum} className="px-2">
+                        ...
+                      </span>
+                    );
                   }
                   return null;
                 })}
