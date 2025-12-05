@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Product } from "@/types/product.types";
 import { productService } from "@/services/product.service";
+import { HighlightText } from "@/components/common/HighlightText";
 
 interface SearchAutocompleteProps {
   value: string;
@@ -21,36 +22,11 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Highlight matching text in suggestions
-  const highlightMatch = (text: string, query: string): JSX.Element => {
-    if (!query.trim()) {
-      return <>{text}</>;
-    }
-
-    const regex = new RegExp(
-      `(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
-      "gi"
-    );
-    const parts = text.split(regex);
-
-    return (
-      <>
-        {parts.map((part, index) =>
-          regex.test(part) ? (
-            <mark key={index} className="bg-yellow-200 font-semibold">
-              {part}
-            </mark>
-          ) : (
-            <span key={index}>{part}</span>
-          )
-        )}
-      </>
-    );
-  };
+  const suggestionsListRef = useRef<HTMLUListElement>(null);
 
   // Debounced search function
   const debouncedSearch = useCallback((searchQuery: string) => {
@@ -61,18 +37,22 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
     if (!searchQuery.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
+      setError(null);
       return;
     }
 
     debounceTimerRef.current = setTimeout(async () => {
       try {
         setLoading(true);
+        setError(null);
         const results = await productService.searchProducts(searchQuery);
         setSuggestions(results.slice(0, 8)); // Limit to 8 suggestions
         setShowSuggestions(true);
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
+      } catch (err) {
+        console.error("Error fetching suggestions:", err);
+        setError("Failed to fetch suggestions. Please try again.");
         setSuggestions([]);
+        setShowSuggestions(false);
       } finally {
         setLoading(false);
       }
@@ -127,13 +107,39 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex((prev) => {
+          const newIndex = prev < suggestions.length - 1 ? prev + 1 : prev;
+          // Scroll selected item into view
+          setTimeout(() => {
+            const selectedElement = suggestionsListRef.current?.children[
+              newIndex
+            ] as HTMLElement;
+            selectedElement?.scrollIntoView({
+              block: "nearest",
+              behavior: "smooth",
+            });
+          }, 0);
+          return newIndex;
+        });
         break;
       case "ArrowUp":
         e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        setSelectedIndex((prev) => {
+          const newIndex = prev > 0 ? prev - 1 : -1;
+          // Scroll selected item into view
+          if (newIndex >= 0) {
+            setTimeout(() => {
+              const selectedElement = suggestionsListRef.current?.children[
+                newIndex
+              ] as HTMLElement;
+              selectedElement?.scrollIntoView({
+                block: "nearest",
+                behavior: "smooth",
+              });
+            }, 0);
+          }
+          return newIndex;
+        });
         break;
       case "Enter":
         e.preventDefault();
@@ -144,9 +150,12 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
       case "Escape":
         setShowSuggestions(false);
         setSelectedIndex(-1);
+        setError(null);
         break;
     }
   };
+
+  const suggestionsId = "search-autocomplete-suggestions";
 
   return (
     <div ref={wrapperRef} className={`relative ${className}`}>
@@ -164,6 +173,16 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
           }}
           placeholder={placeholder}
           className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-controls={suggestionsId}
+          aria-expanded={showSuggestions && (suggestions.length > 0 || error !== null)}
+          aria-activedescendant={
+            selectedIndex >= 0
+              ? `suggestion-${suggestions[selectedIndex]?._id}`
+              : undefined
+          }
+          aria-label="Search products"
         />
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           {loading ? (
@@ -207,11 +226,18 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
 
       {/* Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-96 overflow-y-auto">
-          <ul className="py-1">
+        <div 
+          id={suggestionsId}
+          className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-96 overflow-y-auto"
+          role="listbox"
+        >
+          <ul ref={suggestionsListRef} className="py-1">
             {suggestions.map((product, index) => (
               <li
                 key={product._id}
+                id={`suggestion-${product._id}`}
+                role="option"
+                aria-selected={selectedIndex === index}
                 className={`px-4 py-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0 ${
                   selectedIndex === index ? "bg-blue-50" : ""
                 }`}
@@ -250,15 +276,17 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-gray-900 truncate">
-                      {highlightMatch(product.name, value)}
+                      <HighlightText text={product.name} highlight={value} />
                     </div>
                     {product.description && (
                       <div className="text-xs text-gray-500 truncate mt-1">
-                        {highlightMatch(
-                          product.description.substring(0, 60) +
-                            (product.description.length > 60 ? "..." : ""),
-                          value
-                        )}
+                        <HighlightText 
+                          text={
+                            product.description.substring(0, 60) +
+                            (product.description.length > 60 ? "..." : "")
+                          }
+                          highlight={value}
+                        />
                       </div>
                     )}
                     <div className="flex items-center gap-2 mt-1">
@@ -298,13 +326,36 @@ export const SearchAutocomplete: React.FC<SearchAutocompleteProps> = ({
       {showSuggestions &&
         !loading &&
         value.trim() &&
-        suggestions.length === 0 && (
+        suggestions.length === 0 &&
+        !error && (
           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
             <div className="px-4 py-3 text-sm text-gray-500 text-center">
               No products found matching "{value}"
             </div>
           </div>
         )}
+
+      {/* Error message */}
+      {error && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-red-300 rounded-md shadow-lg">
+          <div className="px-4 py-3 text-sm text-red-600 text-center flex items-center justify-center gap-2">
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {error}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

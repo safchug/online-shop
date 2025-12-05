@@ -106,9 +106,9 @@ describe("SearchAutocomplete", () => {
     // Check if suggestions are displayed
     await waitFor(() => {
       expect(screen.getByAltText("Test Product")).toBeInTheDocument();
-      // Check for the second product by finding list items (second product has no image)
-      const listItems = screen.getAllByRole("listitem");
-      expect(listItems).toHaveLength(2);
+      // Check for the second product by finding options (second product has no image)
+      const options = screen.getAllByRole("option");
+      expect(options).toHaveLength(2);
     });
   });
 
